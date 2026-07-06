@@ -1,6 +1,6 @@
 # Types
 
-Biron is statically typed. Every value has a type known at compile time, and the language provides a small set of built-in scalar types plus a handful of *type constructors* for building pointers, arrays, tuples, and composites out of them. This chapter is a tour of that vocabulary. Aggregate literals, optionals, and unions each have their own chapter. This one focuses on the types themselves and how they relate, including the difference between value and reference semantics.
+Biron is statically typed. Every value has a type known at compile time, and the language provides a small set of built-in scalar types plus a handful of [*type constructors*](https://en.wikipedia.org/wiki/Type_constructor) for building pointers, arrays, tuples, and composites out of them. This chapter is a tour of that vocabulary. Aggregate literals, optionals, and unions each have their own chapter. This one focuses on the types themselves and how they relate, including the difference between value and reference semantics.
 
 ## Built-in scalars
 
@@ -80,12 +80,15 @@ From any type `T` a new type can be built. These constructors are the heart of t
 | `?T` | optional `T` |
 | `@T` | atomic `T` (integer or pointer only) |
 | `[]T` | slice of `T` |
-| `[N]T` | fixed array of `N` elements |
+| `[N]T` | fixed array of exactly `N` elements |
+| `[static; N]T` | growable array, capacity `N`, in place |
+| `[dynamic]T` | growable array, allocated as it grows |
+| `[dynamic; N]T` | growable array, `N` in place then allocated |
 | `[enum; E]T` | array indexed by the enumerators of `E` |
 | `(A, B, ...)` | tuple |
 | `fn(params) -> R` | function type |
 
-A slice `[]T` is a fat pointer of a data pointer and a length, like `String`. A fixed array `[N]T` is a value type of `N` contiguous elements, while an enumerated array `[enum; E]T` is indexed by an enum's members instead of by integers.
+A slice `[]T` is a fat pointer of a data pointer and a length, like `String`. A fixed array `[N]T` is a value type of `N` contiguous elements, while an enumerated array `[enum; E]T` is indexed by an enum's members instead of by integers. The growable kinds `[static; N]T`, `[dynamic]T`, and `[dynamic; N]T` are covered in **Arrays** below.
 
 ```biron
 fn sum4(a: [4]Sint32) -> Sint32 { return a[0] + a[1] + a[2] + a[3]; }
@@ -131,6 +134,47 @@ The same rule holds at every binding site. A call argument, a `return`, and an a
 
 A pointer `*T` is the explicit counterpart. It is written and read out in the open. `&x` takes an address and `*p` dereferences. Neither a pointer nor a reference is ever null. See **References & Pointers** for the complete set of conversions between a value and a reference, the pointer rules, and the no-null guarantee.
 
+## Arrays
+
+An array holds a run of elements of one type. Four kinds cover everything from a plain fixed block to a fully dynamic sequence. They differ only in where the elements are stored and whether the count can grow.
+
+A fixed array `[N]T` is a value of exactly `N` contiguous elements. Its length is always `N`, and it copies whole, like any value.
+
+```biron
+let pt = [3]Sint32 { 1, 2, 3 };      // three elements, always three
+```
+
+The other three kinds are *growable*. Each has a length that is separate from its capacity and supports appending and slicing. The capacity is how many elements fit before more storage is allocated, the length is how many are present at the moment.
+
+| Written | Capacity | Storage |
+| --- | --- | --- |
+| `[static; N]T` | fixed at `N` | in place, no allocation |
+| `[dynamic]T` | unbounded | allocated, grown as needed |
+| `[dynamic; N]T` | unbounded | first `N` in place, allocated past `N` |
+
+A `[static; N]T` holds its elements in place with room for `N` of them, so it needs no allocation at all. Appending past `N` cannot succeed, so its append reports whether the element was taken.
+
+```biron
+let xs: [static; 8]Sint32 = { 1, 2, 3 };   // length 3, capacity 8
+xs.append(4);                               // length 4
+```
+
+A `[dynamic]T` places no fixed bound on its length. Its storage is allocated and grown as elements are added, so an append always succeeds. A `[dynamic; N]T` combines the two. It holds up to `N` elements in place and allocates separate storage only once the length exceeds `N`, so the common small case stays free of any allocation while unbounded growth is still available.
+
+An initializer fills from the front, and the length follows the content, not the capacity, the same way a string's length follows its characters.
+
+```biron
+let ys: [static; 10]Uint32 = { 10, 20, 30 };   // length 3, not 10
+```
+
+Every growable array slices into a plain `[]T`. The slice spans the used portion, so its count is the length rather than the capacity, and it aliases the elements in place. This is the ordinary slicing of **References & Pointers**, with the used length supplying the implicit bound.
+
+```biron
+let view: []Sint32 = xs[:];       // a slice over the used elements of xs
+```
+
+Appending, length, and slicing are ordinary methods that the core library defines over these kinds, so one interface serves all three.
+
 ## Type aliases and named composites
 
 A `type` declaration introduces a name for a type. When the right-hand side is a `struct`, `union`, or `enum` body, it mints a new *named* composite. When it is any other type, it is a plain alias.
@@ -164,6 +208,57 @@ test(struct { x: String } { "Hello" });   // ok    anonymous structure matches F
 ```
 
 An anonymous composite is valid anywhere a type is, a binding annotation, a parameter, a return, or a field. Structures compare by field name and type (or variant, or enumerator) recursively, and a named type inside a structure still compares nominally.
+
+## Embedding and subtype polymorphism
+
+A struct may *embed* another with `using`. Inside a struct body, a bare member `using A` splices in all of `A`'s fields anonymously. A named field `a: using A` splices them in as well and keeps the embedded `A` available under the name `a`. Embedding composes one structure out of another, and from that it gives subtype polymorphism.
+
+```biron
+type A = struct { x: String }
+type B = struct {
+	using A,             // A's fields, spliced in anonymously
+	y: String,
+}
+
+let b = B { .x = "Hi", .y = "World" };
+let vx: &String = b.x;                   // the embedded A.x, addressable
+```
+
+An embedded field is available directly under its own name, so `b.x` denotes the embedded `A.x`. The named form adds a second spelling through the field itself.
+
+```biron
+type C = struct {
+	a: using A,          // embedded, and also available as `a`
+	y: String,
+}
+
+let c = C { .x = "Hi", .y = "World" };
+let p: &String = c.a.x;                  // the same field as c.x
+```
+
+Either spelling is an lvalue, so an embedded field is addressable with `&` and binds to a reference like any other.
+
+A struct that embeds another is a *derived* type of it. A value of the derived type binds to a reference or pointer of the embedded *base* type with no cast, an implicit **downcast**. The reverse, an **upcast** from base to derived, is never implicit and is written as an explicit `as`. Both directions apply to references and pointers alike.
+
+```biron
+let d: &A = b;       // downcast, implicit, d.x is "Hi"
+let e: *A = &b;      // pointers too
+```
+
+A downcast is not a plain reinterpretation. An embedded base may sit anywhere in the derived struct, and one struct may embed several different types, so the conversion refers to the base sub-object wherever it sits. The base is matched by its type, which stays unambiguous because a given type may be embedded only once in a struct.
+
+Embedding composes, so a chain of `using` makes every ancestor a base.
+
+```biron
+type Base = struct { tag: Sint32 }
+type Mid  = struct { using Base, m: Sint32 }
+type Leaf = struct { using Mid,  n: Sint32 }
+
+let leaf = Leaf { .tag = 1, .m = 2, .n = 3 };
+let base: &Base = leaf;      // through Mid, then Base
+```
+
+Whether the embedded members are named or bare changes only whether the sub-object is also available by name, never the subtyping.
 
 ## Untyped literals
 

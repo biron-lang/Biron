@@ -77,6 +77,72 @@ narrowed optional dispatches through the value. A function value is never
 null, so like any pointer it must be initialized. When an absent value is needed,
 an optional `?fn(...) -> R` is used, which is `none` until narrowed.
 
+## Anonymous functions
+
+A function value may be written inline, with no name, as an *anonymous function*.
+The form mirrors a function signature with `|params|` in place of the name,
+followed by an optional effect list, an optional return type, and a body. The
+keyword `fn` stays reserved for named functions and methods.
+
+```biron
+||{}                                   // no parameters, empty body
+||{}()                                 // written and immediately called
+|name: String| <Log> -> Bool { ... }   // parameters, an effect, a return type
+```
+
+The result is an ordinary value of function type, so every rule from the
+**Function values** section applies. It may be bound to a name, passed as an
+argument, or called through.
+
+```biron
+let inc = |x: Sint32| -> Sint32 { return x + 1; };
+let r = apply(inc, 41);                // 42, with `apply` from above
+```
+
+A leading `|`, in a position where an expression is expected, always begins an
+anonymous function and is never read as the bitwise-or operator. An `|` written
+between two operands keeps its ordinary meaning, so the two uses never collide.
+
+> [!RATIONALE]
+> Anonymous functions do not capture the surrounding scope, so Biron has no
+> closures. A body refers only to its own parameters and to file-level items,
+> exactly as a named function does. Capturing an environment cleanly would need a
+> capture list, or a per-name choice of copy versus reference, and both crowd the
+> syntax for little gain. When state must accompany a function, it is bundled into
+> a struct and supplied as an effect, then read inside the body with `E!`. The
+> dependency stays declared at the call site through `with`, rather than closed
+> over implicitly. See **Effects & Hermeticity**.
+
+### Block arguments
+
+When the last parameter of a function has a function type, the anonymous function
+supplied for it may be written after the closing `)` of the call, instead of
+inside the argument list. This trailing form reads well when the final argument
+is a block of work.
+
+Given
+
+```biron
+fn foo(name: String, age: Uint32, cb: fn(name: String)) { cb(name); }
+```
+
+the ordinary call
+
+```biron
+foo("John Doe", 30, |name: String| { c::printf("%s\n", name); });
+```
+
+may instead be written with the block trailing the call.
+
+```biron
+foo("John Doe", 30) |name: String| {
+	c::printf("%s\n", name);
+}
+```
+
+The two are identical. The trailing block is the last argument, moved out of the
+parentheses, and it is a non-capturing anonymous function like any other.
+
 ## Methods
 
 A function written with a *receiver*, a parameter group before the name, is a
