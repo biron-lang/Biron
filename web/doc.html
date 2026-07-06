@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Biron &middot; Documentation</title>
+  <meta name="description" content="Documentation for the Biron programming language: types, expressions, functions, generics, effects, modules, and more.">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="doc.css">
+</head>
+<body class="doc-body">
+  <header class="site-header">
+    <div class="doc-header-inner">
+      <a class="wordmark" href="index.html"><img class="logo" src="logo.svg" alt="">Biron</a>
+      <nav class="nav">
+        <a href="index.html#overview">Overview</a>
+        <a href="index.html#example">Example</a>
+        <a href="doc.html" class="active">Docs</a>
+        <!-- TODO: download URL -->
+        <a href="#">Download</a>
+        <a href="https://github.com/biron-lang/Biron">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="doc-layout">
+    <aside class="doc-nav">
+      <nav id="chapters" aria-label="Chapters"></nav>
+    </aside>
+
+    <main class="doc-main">
+      <article id="content" class="prose-doc">
+        <p class="doc-loading">Loading&hellip;</p>
+      </article>
+    </main>
+
+    <aside class="doc-toc">
+      <div class="doc-toc-inner">
+        <p class="doc-toc-title">On this page</p>
+        <nav id="toc" aria-label="On this page"></nav>
+      </div>
+    </aside>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+  <script src="doc.js"></script>
+</body>
+</html>
