@@ -15,7 +15,7 @@ The table below lists the binary operators from loosest to tightest. A tighter o
 | 5 | `&` | bitwise and |
 | 6 | `==` `!=` | equality |
 | 7 | `<` `<=` `>` `>=` | ordering |
-| 8 | `of` `<?` `>?` `as` `is` | min, max, cast, type test |
+| 8 | `of` `<?` `>?` `as` `is` | property, min, max, cast, type test |
 | 9 | `<<` `>>` | bit shifts |
 | 10 | `+` `-` | add, subtract |
 | 11 (tightest) | `*` `/` `%` | multiply, divide, remainder |
@@ -110,7 +110,8 @@ fn kind(x: Variant) -> Sint32 {
 ```
 
 > [!NOTE]
-> The `of` operator also lives at level 8. It is experimental and minor, so it can be ignored while learning the language.
+> The `of` operator also lives at level 8. It takes a property from a type or an
+> expression, and it has its own chapter. See **Properties**.
 
 ## The force operator
 
@@ -151,6 +152,27 @@ fn compound() -> Sint32 {
 ```
 
 Floating-point `/` and `%` are always unchecked and yield `T`.
+
+## Array programming
+
+When the element type of an array, after peeling away every array layer, is an integer or a real, the arithmetic operators apply to whole arrays component by component. Two arrays of the same type combine element with matching element, and this extends through nesting, so `[2]Real32 + [2]Real32` and `[2][2]Real32 + [2][2]Real32` are both element-wise.
+
+```biron
+let a = [4]Sint32 { 1, 2, 3, 4 };
+let b = [4]Sint32 { 10, 20, 30, 40 };
+let c = a + b;                 // [4]Sint32 { 11, 22, 33, 44 }
+```
+
+A scalar on either side is replicated into every element, so an array pairs with a single value of its element type.
+
+```biron
+let d = a * 2;                 // [4]Sint32 { 2, 4, 6, 8 }
+let e = 2 * a;                 // the scalar may sit on either side
+```
+
+The scalar special cases hold per element. For an integer element type, `/` and `%` produce an optional exactly as scalar checked division does, so `[2]Uint32 / Uint32` and `[2]Uint32 / [2]Uint32` both yield `?[2]Uint32`, `none` when any divisor element is zero, unless the divide sits in an `@(unsafe_div)` scope. The bitshift operators are likewise available for integer element types.
+
+Equality compares component by component and reduces to a single `Bool`, true only when every element matches. `==` and `!=` are the only comparisons permitted. The relational operators `<`, `<=`, `>`, and `>=` are rejected on arrays, since no single ordering is meaningful.
 
 ## The ternary operator
 
