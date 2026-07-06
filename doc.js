@@ -11,10 +11,10 @@ const CHAPTERS = [
   { slug: 'effects',         title: 'Effects & Hermeticity' },
   { slug: 'optionals-unions',title: 'Optionals & Unions' },
   { slug: 'references',      title: 'References & Pointers' },
-  { slug: 'generics',        title: 'Generics' },
-  { slug: 'modules',         title: 'Modules & Foreign' },
-  { slug: 'attributes',      title: 'Constants & Attributes' },
   { slug: 'properties',      title: 'Properties' },
+  { slug: 'generics',        title: 'Generics' },
+  { slug: 'attributes',      title: 'Constants & Attributes' },
+  { slug: 'modules',         title: 'Modules & Foreign' },
   { slug: 'compiler',        title: 'The Compiler' },
 ];
 
