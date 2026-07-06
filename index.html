@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Biron</title>
+  <meta name="description" content="Biron is a systems programming language built for control without footguns: structurally safe, hermetic by default, with an effect system you can sandbox from a single place.">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body id="top">
+  <header class="site-header">
+    <div class="container header-inner">
+      <nav class="nav">
+        <a href="#overview">Overview</a>
+        <a href="#example">Example</a>
+        <a href="doc.html">Docs</a>
+        <!-- TODO: download URL -->
+        <a href="#">Download</a>
+        <a href="https://discord.gg/aM3nZk7bbG">Discord</a>
+        <a href="https://github.com/biron-lang/Biron">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1><img class="hero-logo" src="logo.svg" alt="">Biron</h1>
+        <div class="accent-bar" aria-hidden="true"></div>
+        <p class="lede">
+          A statically typed systems programming language designed for robust
+          applications.
+        </p>
+        <div class="actions">
+          <!-- TODO: download URL -->
+          <a class="btn btn-primary" href="#">Download</a>
+          <a class="btn btn-secondary" href="doc.html">Documentation</a>
+          <a class="btn btn-ghost" href="https://github.com/biron-lang/Biron">GitHub &rsaquo;</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="overview" class="overview">
+      <div class="container prose">
+        <p>
+          Biron blends structural and nominal typing with a focus on ergonomics and
+          expressivity, and compiles to native executables or portable C.
+        </p>
+        <p>
+          The centerpiece is the lexically scoped effect system. Everything with external
+          consequence is threaded through effects, so all Biron code is
+          <strong>hermetic by default</strong>, which means an entire program can be
+          sandboxed, introspected, and intercepted from a single place.
+        </p>
+      </div>
+    </section>
+
+    <section id="example" class="example">
+      <div class="container example-grid">
+        <div class="example-code">
+<pre><code><span class="k">import</span> core.io;
+<span class="k">import</span> core.system;
+<span class="k">fn</span> main() <span class="t">&lt;System&gt;</span> {
+  <span class="k">with</span> IO = System!.console;
+  io::print(<span class="s">"Hello, world!\n"</span>);
+}</code></pre>
+        </div>
+        <div class="example-notes">
+          <h2>Hello, world</h2>
+          <p>
+            <code>import</code> pulls in the <code>io</code> and <code>system</code>
+            core modules. Each one defines an effect, <code>IO</code> and
+            <code>System</code> respectively.
+          </p>
+          <p>
+            <code>main</code> is given a <code>System</code> effect implicitly:
+            a set of implementations of these interfaces for the host system. One of
+            them, <code>console</code>, implements the <code>IO</code> effect.
+          </p>
+          <p>
+            <code>with</code> establishes that <code>IO</code> effect from
+            <code>System!.console</code>, so <code>print</code>, which depends
+            on <code>IO</code>, has an implementation to run against.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="features">
+      <div class="container">
+        <h2>Features</h2>
+        <p class="section-sub">Each links to its place in the documentation.</p>
+
+        <div class="feature-group">
+          <h3 class="group-title">Effects</h3>
+          <div class="grid">
+            <a class="feature" href="doc.html#effects">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M8 11l8-4M8 13l8 4"/></svg></span>
+              <h4>Effect system</h4>
+            </a>
+            <a class="feature" href="doc.html#effects/hermeticity">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V6l7-3z"/></svg></span>
+              <h4>Hermetic by default</h4>
+            </a>
+          </div>
+        </div>
+
+        <div class="feature-group">
+          <h3 class="group-title">Safety</h3>
+          <div class="grid">
+            <a class="feature" href="doc.html#references/no-null-or-uninitialized-pointers">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M6.5 6.5l11 11"/></svg></span>
+              <h4>No null</h4>
+            </a>
+            <a class="feature" href="doc.html#expressions/checked-division">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 6.5L9.5 17 4 11.5"/></svg></span>
+              <h4>Checked by default</h4>
+            </a>
+            <a class="feature" href="doc.html#effects/declaring-an-effect">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+              <h4>No ambient capabilities</h4>
+            </a>
+          </div>
+        </div>
+
+        <div class="feature-group">
+          <h3 class="group-title">Type system</h3>
+          <div class="grid">
+            <a class="feature" href="doc.html#types/nominal-versus-structural-typing">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="11" height="11" rx="2"/><rect x="9" y="9" width="11" height="11" rx="2"/></svg></span>
+              <h4>Structural &amp; nominal</h4>
+            </a>
+            <a class="feature" href="doc.html#optionals-unions/narrowing-by-control-flow">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 4v5a4 4 0 0 0 4 4h8"/><path d="M15 10l4 3-4 3"/></svg></span>
+              <h4>Flow-sensitive typing</h4>
+            </a>
+            <a class="feature" href="doc.html#aggregates/tuple-explosion">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16M6.5 6.5l11 11M17.5 6.5l-11 11"/></svg></span>
+              <h4>Tuples &amp; explosion</h4>
+            </a>
+            <a class="feature" href="doc.html#optionals-unions/unions">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg></span>
+              <h4>Tagged unions</h4>
+            </a>
+            <a class="feature" href="doc.html#aggregates/enums">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></svg></span>
+              <h4>Strongly-typed enums</h4>
+            </a>
+            <a class="feature" href="doc.html#optionals-unions/optionals">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 1 0 18"/><path d="M12 3a9 9 0 0 0 0 18" stroke-dasharray="2 3"/></svg></span>
+              <h4>Optionals</h4>
+            </a>
+            <a class="feature" href="doc.html#generics">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 6H7v12h3M14 6h3v12h-3"/></svg></span>
+              <h4>Generics</h4>
+            </a>
+            <a class="feature" href="doc.html#functions/methods">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2.5"/><path d="M9 12h6M12 8l5 4-5 4"/></svg></span>
+              <h4>Methods</h4>
+            </a>
+            <a class="feature" href="doc.html#types">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="18" r="2"/><path d="M12 8v3M6 16c0-3 2-5 6-5s6 2 6 5"/></svg></span>
+              <h4>Subtype polymorphism</h4>
+            </a>
+          </div>
+        </div>
+
+        <div class="feature-group">
+          <h3 class="group-title">Language</h3>
+          <div class="grid">
+            <a class="feature" href="doc.html#functions/function-values">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 4c-3 0-2 6-5 8 3 2 2 8 5 8M15 4c3 0 2 6 5 8-3 2-2 8-5 8"/></svg></span>
+              <h4>Anonymous functions</h4>
+            </a>
+            <a class="feature" href="doc.html#functions">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12a7 7 0 0 1 12-5"/><path d="M17 3v4h-4"/><path d="M19 12a7 7 0 0 1-12 5"/><path d="M7 21v-4h4"/></svg></span>
+              <h4>Generators</h4>
+            </a>
+            <a class="feature" href="doc.html#modules">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></svg></span>
+              <h4>Modules</h4>
+            </a>
+          </div>
+        </div>
+
+        <div class="feature-group">
+          <h3 class="group-title">Low-level</h3>
+          <div class="grid">
+            <a class="feature" href="doc.html#references">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h11M11 8l4 4-4 4"/><circle cx="20" cy="12" r="1.6"/></svg></span>
+              <h4>References &amp; pointers</h4>
+            </a>
+            <a class="feature" href="doc.html#effects/atomics-and-memoryorder">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><ellipse cx="12" cy="12" rx="9" ry="4"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(120 12 12)"/></svg></span>
+              <h4>Atomics</h4>
+            </a>
+            <a class="feature" href="doc.html#aggregates/arrays">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="5" height="8" rx="1"/><rect x="9.5" y="8" width="5" height="8" rx="1"/><rect x="16" y="8" width="5" height="8" rx="1"/></svg></span>
+              <h4>Arrays</h4>
+            </a>
+            <a class="feature" href="doc.html#aggregates/arrays">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></span>
+              <h4>Array programming</h4>
+            </a>
+          </div>
+        </div>
+
+        <div class="feature-group">
+          <h3 class="group-title">Compiler</h3>
+          <div class="grid">
+            <a class="feature" href="doc.html#compiler/speed">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 3L5 13h5l-1 8 8-11h-5l1-7z"/></svg></span>
+              <h4>Fast</h4>
+            </a>
+            <a class="feature" href="doc.html#compiler/native-executables-or-portable-c">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.5"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/></svg></span>
+              <h4>Native or C output</h4>
+            </a>
+            <a class="feature" href="doc.html#compiler/reproducible-builds">
+              <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="12" rx="1.5"/><rect x="8" y="8" width="12" height="12" rx="1.5"/></svg></span>
+              <h4>Reproducible</h4>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <nav class="foot-nav">
+        <a href="doc.html">Docs</a>
+        <!-- TODO: download URL -->
+        <a href="#">Download</a>
+        <a href="https://discord.gg/aM3nZk7bbG">Discord</a>
+        <a href="https://github.com/biron-lang/Biron">GitHub</a>
+      </nav>
+    </div>
+  </footer>
+</body>
+</html>
