@@ -205,9 +205,11 @@ An alias has no identity of its own, so a value typed through it is the underlyi
 
 ## Nominal versus structural typing
 
-A type made with `type` is **nominal**. It matches only itself, so two nominal types with an identical structure are still different types. A type written anonymously, an inline `struct { ... }`, a tuple, an array, and so on, is **structural**. It matches any type of the same structure, named or not, and a `using` alias of an anonymous body is structural as well, since the alias only gives that anonymous type a name.
+A `type` declaration always makes a **distinct** type, and distinct types fall into two families that behave differently. A named composite is matched by structure, while a distinct type over any other body is not. Both are set out below.
 
-A structural value is accepted wherever a nominal type of the same structure is expected, while a nominal value is accepted only for its own type.
+### Named composites match by structure
+
+A `type` over a `struct`, `union`, or `enum` body is a **nominal composite**. It matches itself, and it also matches any **anonymous** composite of the same structure, in either direction. An anonymous composite is one written inline, such as `struct { x: String }`, or a `using` alias of one. Two *different* nominal composites never match, even when their structures are identical.
 
 ```biron
 type Foo = struct { x: String }
@@ -219,22 +221,72 @@ fn foo(f: Foo) {}
 foo(Foo { "hi" });                        // ok    Foo == Foo
 foo(Bar { "hi" });                        // error Bar and Foo are distinct
 foo({ "hi" });                            // ok    inferred as Foo
-foo(struct { x: String } { "hi" });       // ok    structural match
-foo(Anon { "hi" });                       // ok    structural match, same as above
+foo(struct { x: String } { "hi" });       // ok    an anonymous structure matches
+foo(Anon { "hi" });                       // ok    the same, through `using`
 ```
 
-The acceptance is one way. A structural value is accepted in a nominal position, but a nominal value is not accepted in a structural position, nor for a different nominal type. Each of those is written with an explicit `as`. The rule is the same for every kind of type, not only for composites. A bare `Sint32` is accepted where a `type Meters = Sint32` is expected, and an anonymous tuple where a `type Flat = (Uint8, Uint64, Uint8)` is expected, while the reverse is written with `as`.
+The match is by type, so an anonymous composite held in a variable is accepted the same as one written inline. Structures compare by field name and type, or variant, or enumerator, recursively, and a named type inside a structure still compares nominally.
+
+### Distinct types are built, not converted
+
+A `type` over any other body, a scalar, an array, a tuple, a slice, or a function type, is a plain **distinct type**. It has no anonymous form to match, so a value is not converted into it from another type. A value is made one of three ways.
+
+- A **non-typed literal** adapts to it. A bare number becomes a distinct integer, and a bare `{ ... }` becomes a distinct struct or array.
+- A value is **built as the type**, by naming the distinct type on an aggregate literal.
+- An explicit **`as`** cast crosses from another type.
+
+A value that already has a type, whether a variable or a literal written with an explicit type, is a *different* type. It is not made one of the distinct type on its own, so it is crossed with `as`.
 
 ```biron
 type Meters = Sint32
-type Flat   = (Uint8, Uint64, Uint8)
+type Cell   = [2]Uint32
 
-let m: Meters = 40;                       // structural into nominal
-let f: Flat   = (1, 2, 3);                // anonymous tuple into Flat
-let n: Sint32 = m as Sint32;              // the reverse is written with `as`
+let m: Meters = 40;                 // ok    a non-typed literal adapts
+let c: Cell   = { 10, 20 };         // ok    a non-typed aggregate adapts
+let d: Cell   = Cell { 10, 20 };    // ok    built as Cell
+
+let n: Sint32 = 10;
+let bad: Meters = n;                // error n is a typed Sint32, not a Meters
+let raw: [2]Uint32 = [2]Uint32 { 1, 2 };
+let bad2: Cell = raw;               // error raw is a typed [2]Uint32, not a Cell
+let ok: Meters = n as Meters;       // an explicit `as` crosses
 ```
 
-An anonymous composite is valid anywhere a type is, a binding annotation, a parameter, a return, or a field. Structures compare by field name and type (or variant, or enumerator) recursively, and a named type inside a structure still compares nominally.
+The separation holds in both directions, and between two distinct types. A `Meters` value is not accepted as a plain `Sint32`, and one distinct type is not accepted as another over the same underlying, each without an `as`. This is the behavior of the built-in `Length`, a distinct `Uint64`, and `Bool`, a distinct `Bool8`.
+
+```biron
+type Feet = Sint32
+let m: Meters = 10;
+let s: Sint32 = m;            // error, write `m as Sint32`
+let k: Feet   = m;            // error, write `m as Feet`
+```
+
+### Operations see through a distinct type
+
+A distinct type keeps the operations of the type it was built from, and the result keeps the distinct type, so it stays convenient rather than opaque. Arithmetic, comparison, indexing, and field or swizzle access all apply.
+
+```biron
+type Meters = Sint32
+let a: Meters = 10;
+let b: Meters = a + a;        // ok    arithmetic stays Meters
+let c: Meters = a + 1;        // ok    the literal adapts to Meters
+let t: Bool   = a == a;       // ok    a comparison is a Bool
+
+type Row = [3]Sint32
+let r: Row    = { 1, 2, 3 };
+let e: Sint32 = r[0];         // ok    indexing yields the element type
+```
+
+The distinctness is still respected at the edges of an operation. A `Meters` and a plain `Sint32` do not combine directly, since they are different types, so one is cast first.
+
+```biron
+let a: Meters = 10;
+let n: Sint32 = 5;
+let bad = a + n;              // error Meters and Sint32 are different types
+let ok  = a + (n as Meters); // ok
+```
+
+An anonymous composite is valid anywhere a type is, a binding annotation, a parameter, a return, or a field.
 
 ## Embedding and subtype polymorphism
 
