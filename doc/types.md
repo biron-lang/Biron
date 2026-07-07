@@ -175,15 +175,16 @@ let view: []Sint32 = xs[:];       // a slice over the used elements of xs
 
 Appending, length, and slicing are ordinary methods that the core library defines over these kinds, so one interface serves all three.
 
-## Type aliases and named composites
+## Named types and aliases
 
-A `type` declaration introduces a name for a type. When the right-hand side is a `struct`, `union`, or `enum` body, it mints a new *named* composite. When it is any other type, it is a plain alias.
+A `type` declaration mints a **new distinct type**. This holds for every kind of body, a `struct`, `union`, or `enum`, and equally a scalar, a tuple, an array, or a function type. The result has its own identity and never coerces to or from the type its body describes, so an explicit `as` is the only crossing.
 
 ```biron
 type Point   = struct { x: Sint32, y: Sint32 }
 type Color   = enum { Red, Green, Blue }        // 0, 1, 2
 type Status  = enum { Ok = 0, Warn = 10, Err }  // 0, 10, 11
 type Small   = enum as Uint8 { Lo = 200, Hi }   // underlying Uint8
+type Meters  = Sint32                           // a distinct integer, not a Sint32
 ```
 
 An `enum` gives each member a value. `A = expr` sets it, an unannotated member is the previous one plus one, and the first defaults to zero. `enum as T` chooses the underlying integer type (the default is `Sint32`). A composite may be generic in a type or value parameter.
@@ -193,18 +194,44 @@ type Box  = struct[T: Type] { value: T }
 type Pair = struct[A: Type, B: Type] { first: A, second: B }
 ```
 
+A `using` declaration is the counterpart. It mints no new type and gives a **transparent alias**, so the name stands for whatever the right-hand side already denotes.
+
+```biron
+using Count   = Sint32                  // Count is only another name for Sint32
+using Handler = fn(x: Sint32) -> Sint32 // and this names a function type
+```
+
+An alias has no identity of its own, so a value typed through it is the underlying type exactly, with nothing to cross. When the right-hand side is an anonymous `struct`, `union`, or `enum` body, the alias denotes that **structural** type rather than a nominal one, which the next section makes precise.
+
 ## Nominal versus structural typing
 
-Biron is structurally typed, with one exception. Nominality applies only when a type is *named*. A named `struct`, `union`, or `enum` matches only itself, so two named types with identical layouts are still different types. An **anonymous** composite written inline is structural. It matches any type with the same structure, named or not.
+A type made with `type` is **nominal**. It matches only itself, so two nominal types with an identical structure are still different types. A type written anonymously, an inline `struct { ... }`, a tuple, an array, and so on, is **structural**. It matches any type of the same structure, named or not, and a `using` alias of an anonymous body is structural as well, since the alias only gives that anonymous type a name.
+
+A structural value is accepted wherever a nominal type of the same structure is expected, while a nominal value is accepted only for its own type.
 
 ```biron
 type Foo = struct { x: String }
 type Bar = struct { x: String }
-fn test(f: Foo) {}
+using Anon = struct { x: String }         // structural, not nominal
 
-test(Foo { "Hello" });                    // ok    Foo == Foo
-test(Bar { "Hello" });                    // error Bar and Foo are distinct
-test(struct { x: String } { "Hello" });   // ok    anonymous structure matches Foo
+fn foo(f: Foo) {}
+
+foo(Foo { "hi" });                        // ok    Foo == Foo
+foo(Bar { "hi" });                        // error Bar and Foo are distinct
+foo({ "hi" });                            // ok    inferred as Foo
+foo(struct { x: String } { "hi" });       // ok    structural match
+foo(Anon { "hi" });                       // ok    structural match, same as above
+```
+
+The acceptance is one way. A structural value is accepted in a nominal position, but a nominal value is not accepted in a structural position, nor for a different nominal type. Each of those is written with an explicit `as`. The rule is the same for every kind of type, not only for composites. A bare `Sint32` is accepted where a `type Meters = Sint32` is expected, and an anonymous tuple where a `type Flat = (Uint8, Uint64, Uint8)` is expected, while the reverse is written with `as`.
+
+```biron
+type Meters = Sint32
+type Flat   = (Uint8, Uint64, Uint8)
+
+let m: Meters = 40;                       // structural into nominal
+let f: Flat   = (1, 2, 3);                // anonymous tuple into Flat
+let n: Sint32 = m as Sint32;              // the reverse is written with `as`
 ```
 
 An anonymous composite is valid anywhere a type is, a binding annotation, a parameter, a return, or a field. Structures compare by field name and type (or variant, or enumerator) recursively, and a named type inside a structure still compares nominally.

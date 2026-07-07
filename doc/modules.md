@@ -104,26 +104,26 @@ Biron is structurally typed, but a *named* type is nominal. It equals only itsel
 Two named types with an identical layout are still different types, even across a
 module boundary. So `A::Rational` and `B::Rational` are never the same type.
 
-A `type` declaration is either a nominal definition or an alias, and the difference
-matters across modules.
+A `type` declaration always mints a brand-new distinct type, while a `using`
+declaration gives a transparent alias. The difference matters across modules.
 
-A **nominal definition** gives a struct, union, or enum body and mints a brand-new
-type.
+A `type` gives a struct, union, enum, or any other body a fresh identity.
 
 ```biron
 @(export) type Rational = struct { num: Real32, den: Real32 }
 ```
 
-An **alias** gives an existing type as the body. It does not mint anything. It is
-simply another name for the same type.
+A `using` mints nothing. The name is only another name for an existing type.
 
 ```biron
-@(export) type Id = Sint32          // Id is just another name for Sint32
+@(export) using Id = Sint32          // Id is another name for Sint32
 ```
 
-Because an alias is transparent, a value typed through it works anywhere the
-underlying type is expected. If module `B` writes `type Rational = A::Rational`,
-then `B::Rational` *is* `A::Rational`, and a value of one is a value of the other.
+Because an alias is transparent, a value typed through it is accepted anywhere the
+underlying type is expected. If module `B` writes `using Rational = A::Rational`,
+then `B::Rational` *is* `A::Rational`, and a value of one is a value of the other. An
+exported alias may even name a type its own module keeps private, and only the alias
+becomes visible, so `B::Rational` is resolved while the private name behind it is not.
 
 ## Foreign functions
 
