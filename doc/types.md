@@ -205,88 +205,33 @@ An alias has no identity of its own, so a value typed through it is the underlyi
 
 ## Nominal versus structural typing
 
-A `type` declaration always makes a **distinct** type, and distinct types fall into two families that behave differently. A named composite is matched by structure, while a distinct type over any other body is not. Both are set out below.
+A `type` gives its type a fresh identity, so a value fits a type `T` in only two situations. Either it is a **non-typed literal**, a bare number, `{ ... }`, or `( ... )`, which then takes the type `T`, or its type is **already `T`**. Anything else crosses with an explicit `as`.
 
-### Named composites match by structure
-
-A `type` over a `struct`, `union`, or `enum` body is a **nominal composite**. It matches itself, and it also matches any **anonymous** composite of the same structure, in either direction. An anonymous composite is one written inline, such as `struct { x: String }`, or a `using` alias of one. Two *different* nominal composites never match, even when their structures are identical.
+The one addition is structural typing for the three composites. For a `struct`, `union`, or `enum`, an anonymous one of the same structure counts as already being `T`, in either direction. It does not extend to arrays, tuples, or scalars, which hold their own identity like any distinct type. (This is also why the built-in `Length`, a distinct `Uint64`, and `Bool`, a distinct `Bool8`, are not accepted as their underlying without a cast.)
 
 ```biron
-type Foo = struct { x: String }
-type Bar = struct { x: String }
-using Anon = struct { x: String }         // structural, not nominal
-
-fn foo(f: Foo) {}
-
-foo(Foo { "hi" });                        // ok    Foo == Foo
-foo(Bar { "hi" });                        // error Bar and Foo are distinct
-foo({ "hi" });                            // ok    inferred as Foo
-foo(struct { x: String } { "hi" });       // ok    an anonymous structure matches
-foo(Anon { "hi" });                       // ok    the same, through `using`
-```
-
-The match is by type, so an anonymous composite held in a variable is accepted the same as one written inline. Structures compare by field name and type, or variant, or enumerator, recursively, and a named type inside a structure still compares nominally.
-
-### Distinct types are built, not converted
-
-A `type` over any other body, a scalar, an array, a tuple, a slice, or a function type, is a plain **distinct type**. It has no anonymous form to match, so a value is not converted into it from another type. A value is made one of three ways.
-
-- A **non-typed literal** adapts to it. A bare number becomes a distinct integer, and a bare `{ ... }` becomes a distinct struct or array.
-- A value is **built as the type**, by naming the distinct type on an aggregate literal.
-- An explicit **`as`** cast crosses from another type.
-
-A value that already has a type, whether a variable or a literal written with an explicit type, is a *different* type. It is not made one of the distinct type on its own, so it is crossed with `as`.
-
-```biron
+type Foo    = struct { x: String }
+type Bar    = struct { x: String }
 type Meters = Sint32
-type Cell   = [2]Uint32
 
-let m: Meters = 40;                 // ok    a non-typed literal adapts
-let c: Cell   = { 10, 20 };         // ok    a non-typed aggregate adapts
-let d: Cell   = Cell { 10, 20 };    // ok    built as Cell
+let a: Foo    = { "hi" };                       // a literal takes the type
+let b: Foo    = struct { x: String } { "hi" };  // an anonymous struct is a Foo
+let c: Foo    = Bar { "hi" };                   // error, a different nominal type
 
+let m: Meters = 40;                             // a literal takes the type
 let n: Sint32 = 10;
-let bad: Meters = n;                // error n is a typed Sint32, not a Meters
-let raw: [2]Uint32 = [2]Uint32 { 1, 2 };
-let bad2: Cell = raw;               // error raw is a typed [2]Uint32, not a Cell
-let ok: Meters = n as Meters;       // an explicit `as` crosses
+let d: Meters = n;                              // error, n is a typed Sint32
+let e: Meters = n as Meters;                    // an explicit `as` crosses
 ```
 
-The separation holds in both directions, and between two distinct types. A `Meters` value is not accepted as a plain `Sint32`, and one distinct type is not accepted as another over the same underlying, each without an `as`. This is the behavior of the built-in `Length`, a distinct `Uint64`, and `Bool`, a distinct `Bool8`.
-
-```biron
-type Feet = Sint32
-let m: Meters = 10;
-let s: Sint32 = m;            // error, write `m as Sint32`
-let k: Feet   = m;            // error, write `m as Feet`
-```
-
-### Operations see through a distinct type
-
-A distinct type keeps the operations of the type it was built from, and the result keeps the distinct type, so it stays convenient rather than opaque. Arithmetic, comparison, indexing, and field or swizzle access all apply.
-
-```biron
-type Meters = Sint32
-let a: Meters = 10;
-let b: Meters = a + a;        // ok    arithmetic stays Meters
-let c: Meters = a + 1;        // ok    the literal adapts to Meters
-let t: Bool   = a == a;       // ok    a comparison is a Bool
-
-type Row = [3]Sint32
-let r: Row    = { 1, 2, 3 };
-let e: Sint32 = r[0];         // ok    indexing yields the element type
-```
-
-The distinctness is still respected at the edges of an operation. A `Meters` and a plain `Sint32` do not combine directly, since they are different types, so one is cast first.
+A distinct type keeps the operations of its underlying, and each result keeps the distinct type. A literal operand adapts, a differently typed operand is cast.
 
 ```biron
 let a: Meters = 10;
-let n: Sint32 = 5;
-let bad = a + n;              // error Meters and Sint32 are different types
-let ok  = a + (n as Meters); // ok
+let b: Meters = a + a;          // stays Meters
+let c: Meters = a + 1;          // the literal adapts
+let e: Meters = a + (5 as Meters);
 ```
-
-An anonymous composite is valid anywhere a type is, a binding annotation, a parameter, a return, or a field.
 
 ## Embedding and subtype polymorphism
 
