@@ -45,7 +45,8 @@ kinds.
 | Declaration | Introduces |
 |-------------|------------|
 | `fn`        | a function (or method, or associated function) |
-| `type`      | a named type, an alias or a `struct`, `union`, or `enum` |
+| `type`      | a new distinct type, from a `struct`, `union`, `enum`, or any other body |
+| `using`     | a transparent alias for an existing type |
 | `const`     | a named compile-time constant |
 | `import`    | another module, made available under a namespace |
 | `foreign`   | external C symbols to link against |
