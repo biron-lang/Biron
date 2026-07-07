@@ -122,6 +122,29 @@
 .prose-doc h3 { font-size: 18px; margin: 22px 0 9px; }
 .prose-doc h4 { font-size: 15.5px; margin: 18px 0 7px; }
 
+.heading-anchor {
+  margin-left: 0.4em;
+  color: var(--muted);
+  opacity: 0;
+  vertical-align: middle;
+  transition: opacity 0.12s ease, color 0.12s ease;
+}
+.heading-anchor svg {
+  width: 0.68em;
+  height: 0.68em;
+  display: inline-block;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.prose-doc h2:hover .heading-anchor,
+.prose-doc h3:hover .heading-anchor,
+.heading-anchor:focus-visible { opacity: 1; }
+.heading-anchor:hover { color: var(--accent); }
+
 .prose-doc p,
 .prose-doc li {
   color: var(--text);

@@ -222,20 +222,31 @@ function buildChapterNav(activeSlug) {
   }
 }
 
-function buildToc(heads) {
+function buildToc(heads, slug) {
   tocEl.innerHTML = '';
   for (const h of heads) {
     const a = document.createElement('a');
-    a.href = '#';
+    a.href = '#' + slug + '/' + h.id;
     a.textContent = h.textContent;
     a.className = h.tagName === 'H3' ? 'lvl-3' : 'lvl-2';
     a.dataset.target = h.id;
-    a.addEventListener('click', ev => {
-      ev.preventDefault();
-      const el = document.getElementById(h.id);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
     tocEl.appendChild(a);
+  }
+}
+
+const ANCHOR_ICON =
+  '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+  '<path d="M10 13a5 5 0 0 0 7.07 0l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>' +
+  '<path d="M14 11a5 5 0 0 0-7.07 0l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+
+function decorateHeadings(heads, slug) {
+  for (const h of heads) {
+    const a = document.createElement('a');
+    a.className = 'heading-anchor';
+    a.href = '#' + slug + '/' + h.id;
+    a.setAttribute('aria-label', 'Link to this section');
+    a.innerHTML = ANCHOR_ICON;
+    h.appendChild(a);
   }
 }
 
@@ -305,7 +316,8 @@ async function loadChapter(slug, anchor) {
   processCallouts(contentEl);
   appendFootnotes(fn.order, fn.defs);
 
-  buildToc(heads);
+  buildToc(heads, slug);
+  decorateHeadings(heads, slug);
   spyHeads = Array.from(heads);
   loadedSlug = slug;
   if (!scrollToAnchor(anchor)) window.scrollTo(0, 0);
