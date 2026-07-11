@@ -98,6 +98,14 @@ State that genuinely must be shared and mutated is passed explicitly instead, by
 > [!RATIONALE]
 > Mutable global state could in principle be modeled as an effect, an imagined `<Global>` capability threaded through every function that touches it. Such an effect could never be made hermetic. Its whole purpose would be to be available from anywhere, which is the opposite of a capability granted in one place and passed inward. Because that cannot be reconciled with the guarantee, global mutable state is absent from the language.
 
+## Dynamic linking
+
+Traditional dynamic linking violates hermeticity. A dynamically linked executable depends on an ambient environment on the machine it runs on, the shared libraries it was built against, resolved by a system linker before its own code runs. That environment appears in no signature, yet the program cannot start without it. It is exactly the undeclared, ambient dependency the effect system exists to rule out.
+
+The problem does not stop at the dependency. The resolved libraries also decide how the program behaves, so the host machine leaks its own state inward through them. The same binary on two machines inherits two different environments, which makes it two different programs.
+
+Biron addresses this without giving up dynamic linking. The dynamic linker is captured at startup and provided through the `System` effect, so it becomes a declared capability rather than an ambient assumption, as described in [Freestanding Executables](#freestanding).
+
 ## Const effects
 
 An effect prefixed with `const` becomes a compile-time value.
