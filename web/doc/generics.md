@@ -43,7 +43,7 @@ Type and value generics may be mixed and matched. This function is generic in tw
 
 ```biron
 fn[T: Type, U: Type, a: T, b: U] pairsum() -> Sint32 {
-	return (a as Sint32) + (b as Sint32);
+	return (a as! Sint32) + (b as! Sint32);
 }
 ```
 
@@ -146,7 +146,7 @@ fn[T: Type](self: &Box::[T]) get() -> T { return self.value; }
 When the parameter cannot be inferred from the receiver or the arguments, it is given with a turbofish on the call itself.
 
 ```biron
-fn[T: Type](x: Sint32) widen() -> T { return x as T; }
+fn[T: Type](x: Sint32) widen() -> T { return x as! T; }
 
 let a = 7.widen::[Sint64]();
 ```

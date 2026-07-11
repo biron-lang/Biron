@@ -85,11 +85,11 @@ A many-item pointer `[*]T` has the same machine representation as `*T`, a bare a
 
 Slicing a many-item pointer forms a length only when an upper bound is given. `p[:hi]` and `p[lo:hi]` produce a `[]T` slice of `hi - lo` elements starting at `lo`. `p[lo:]` has no upper bound and no length to form, so it stays a `[*]T` advanced by `lo`.
 
-The two pointer kinds do not convert on their own. A `*T` becomes a `[*]T` with an explicit `as` cast, an assertion that the address points at a run of elements. A `[*]T` becomes a `*T` by taking the address of an element, so `&p[0]` is the pointer to the first element.
+The two pointer kinds do not convert on their own. A `*T` becomes a `[*]T` with an explicit `as!` cast, an assertion that the address points at a run of elements. A `[*]T` becomes a `*T` by taking the address of an element, so `&p[0]` is the pointer to the first element.
 
 ```biron
 let x: [4]Uint8;
-let p = &x[0] as [*]Uint8;   // an explicit as forms a many-item pointer
+let p = &x[0] as! [*]Uint8;   // an explicit `as!` forms a many-item pointer
 let first: Uint8 = p[0];     // indexing yields the element
 let rest = p[1:];            // no upper bound, still a [*]Uint8
 let two: []Uint8 = p[:2];    // an upper bound forms a []Uint8
@@ -121,16 +121,16 @@ Optionals `?T` and slices `[]T` are exempt, since each has its own valid empty f
 
 ## The Address type
 
-`Address` is the raw pointer, Biron's `void*`. Any pointer implicitly widens to it, and an `as` cast recovers a typed pointer. It round-trips through an integer, which is how a null or sentinel is expressed.
+`Address` is the raw pointer, Biron's `void*`. Any pointer implicitly widens to it, and an `as!` cast recovers a typed pointer. It round-trips through an integer, which is how a null or sentinel is expressed.
 
 ```biron
 let x: Sint32 = 42;
 let p: *Sint32 = &x;
 let a: Address = p;          // any pointer widens to Address
-let back = a as *Sint32;     // cast recovers the typed pointer
+let back = a as! *Sint32;     // cast recovers the typed pointer
 // *back == 42
 
-let nil = 0 as Address;      // integer -> Address for a sentinel
+let nil = 0 as! Address;      // integer -> Address for a sentinel
 ```
 
-A reference does not widen on its own. Its address must be taken first (`&r` gives a `*T`, which then widens). One safety rule applies to typed pointer and reference casts. An `as` cast may **lower** or keep the alignment its referent needs, but may not **raise** it, so `*Uint8 as *Uint16` is rejected. `Address` is the one exemption, so `(p as Address) as *Uint16` is the explicit way to assert the real alignment.
+A reference does not widen on its own. Its address must be taken first (`&r` gives a `*T`, which then widens). One safety rule applies to typed pointer and reference casts. An `as!` cast may **lower** or keep the alignment its referent needs, but may not **raise** it, so `*Uint8 as! *Uint16` is rejected. `Address` is the one exemption, so `(p as! Address) as! *Uint16` is the explicit way to assert the real alignment.

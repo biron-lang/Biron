@@ -73,7 +73,7 @@ A union is constructed simply by assigning one of its variants. That sets the ta
 let s: Variant = "hello";
 let b: Variant = true;
 let i: Variant = 42;
-let f: Variant = 3.5 as Real32;
+let f: Variant = 3.5 as! Real32;
 ```
 
 > [!NOTE]
@@ -97,7 +97,7 @@ Inside `if x is Real32 { ... }`, `x` is a `Real32` and can be used as one.
 
 ```biron
 fn dbl_float(x: Variant) -> Sint32 {
-	if x is Real32 { return (x * (2.0 as Real32)) as Sint32; }
+	if x is Real32 { return (x * (2.0 as! Real32)) as! Sint32; }
 	return -1;
 }
 ```

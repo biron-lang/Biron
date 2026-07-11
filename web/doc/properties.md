@@ -6,7 +6,7 @@ A *property* is a compile-time fact about a type or an expression. Properties ar
 
 `of` is written between a property name and its operand, as `name of X`. The operand `X` may be a type, such as `Sint32`, or an expression such as a variable, in which case the property is taken from the expression's type. Both spellings give the same answer, so `size of p` and `size of Sint64` agree when `p` is a `Sint64`.
 
-Because every property is a compile-time value or a type, an `of` result may stand wherever a constant or a type annotation is expected, including an array length, a `const` binding, or a parameter type. `of` sits at precedence level 8, alongside `as` and `is`. See **Expressions** for the full table.
+Because every property is a compile-time value or a type, an `of` result may stand wherever a constant or a type annotation is expected, including an array length, a `const` binding, or a parameter type. `of` sits at precedence level 8, alongside `as!` and `is`. See **Expressions** for the full table.
 
 ## Built-in properties
 

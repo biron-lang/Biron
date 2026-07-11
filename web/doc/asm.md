@@ -100,7 +100,7 @@ let old = unsafe { fetch_add(delta, &counter) };   // old value returned, counte
 An immediate operand holds a constant that is known at compile time. It is always an input, and a write direction on one is rejected.
 
 ```biron
-asm::Imm { 42 as Uint32 },
+asm::Imm { 42 as! Uint32 },
 ```
 
 ## Clobbers

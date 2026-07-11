@@ -29,7 +29,7 @@ let sum = h + g;               // 3.75, exact in a half float
 
 `Bool` is the ordinary boolean and is always one byte. The sized booleans `Bool8`, `Bool16`, `Bool32`, and `Bool64` exist for when the exact width of a boolean matters, most often in C interop where a boolean field or argument has a fixed size. `Bool8` is one byte just as `Bool` is, yet it is a distinct type, so the two do not coerce to one another on their own.
 
-A boolean expression, whether `Bool` or a sized boolean, converts implicitly to `Bool` in the condition of an `if` and in the condition of a ternary, and in no other position. Anywhere else a sized boolean keeps its own type, and an explicit `as` cast is required to move between the boolean types.
+A boolean expression, whether `Bool` or a sized boolean, converts implicitly to `Bool` in the condition of an `if` and in the condition of a ternary, and in no other position. Anywhere else a sized boolean keeps its own type, and an explicit `as!` cast is required to move between the boolean types.
 
 ## String, Length, Address, and Type
 
@@ -45,18 +45,18 @@ let s: String = "Hello, world\n";
 
 ### Length
 
-`Length` is a distinct pointer-sized unsigned integer. Its width is the number of bytes needed to reference any location in memory, so it is 4 bytes on a 32-bit platform and 8 bytes on a 64-bit platform. `Length` is the native index type used for array indexing, and for measuring sizes. It has its own identity and does **not** implicitly coerce to an ordinary integer such as `Uint64`. Crossing between the two requires an explicit `as` cast.
+`Length` is a distinct pointer-sized unsigned integer. Its width is the number of bytes needed to reference any location in memory, so it is 4 bytes on a 32-bit platform and 8 bytes on a 64-bit platform. `Length` is the native index type used for array indexing, and for measuring sizes. It has its own identity and does **not** implicitly coerce to an ordinary integer such as `Uint64`. Crossing between the two requires an explicit `as!` cast.
 
 ### Address
 
-`Address` is a distinct raw pointer, the type `*()` (a pointer to unit) and Biron's analogue of C's `void*`. Any typed pointer widens to it implicitly, an `as` cast recovers a typed pointer, and it round-trips through an integer so that a null or sentinel value can be expressed.
+`Address` is a distinct raw pointer, the type `*()` (a pointer to unit) and Biron's analogue of C's `void*`. Any typed pointer widens to it implicitly, an `as!` cast recovers a typed pointer, and it round-trips through an integer so that a null or sentinel value can be expressed.
 
 ```biron
 let x: Sint32 = 42;
 let p: *Sint32 = &x;
 let a: Address = p;            // a pointer widens implicitly
-let back = a as *Sint32;       // a cast recovers the typed pointer
-let nil = 0 as Address;        // an integer round-trips for a sentinel
+let back = a as! *Sint32;       // a cast recovers the typed pointer
+let nil = 0 as! Address;        // an integer round-trips for a sentinel
 ```
 
 A reference does not widen to `Address` on its own. Its address must be taken with `&` first, which gives a pointer. Like any pointer, an `Address` cannot be dereferenced until it is cast back to a typed pointer.
@@ -180,7 +180,7 @@ Appending, length, and slicing are ordinary methods that the core library define
 
 ## Named types and aliases
 
-A `type` declaration mints a **new distinct type**. This holds for every kind of body, a `struct`, `union`, or `enum`, and equally a scalar, a tuple, an array, or a function type. The result has its own identity and never coerces to or from the type its body describes, so an explicit `as` is the only crossing.
+A `type` declaration mints a **new distinct type**. This holds for every kind of body, a `struct`, `union`, or `enum`, and equally a scalar, a tuple, an array, or a function type. The result has its own identity and never coerces to or from the type its body describes, so an explicit `as!` is the only crossing.
 
 ```biron
 type Point   = struct { x: Sint32, y: Sint32 }
@@ -208,7 +208,7 @@ An alias has no identity of its own, so a value typed through it is the underlyi
 
 ## Nominal versus structural typing
 
-A `type` gives its type a fresh identity, so a value fits a type `T` in only two situations. Either it is a **non-typed literal**, a bare number, `{ ... }`, or `( ... )`, which then takes the type `T`, or its type is **already `T`**. Anything else crosses with an explicit `as`.
+A `type` gives its type a fresh identity, so a value fits a type `T` in only two situations. Either it is a **non-typed literal**, a bare number, `{ ... }`, or `( ... )`, which then takes the type `T`, or its type is **already `T`**. Anything else crosses with an explicit `as!`.
 
 The one addition is structural typing for the three composites. For a `struct`, `union`, or `enum`, an anonymous one of the same structure counts as already being `T`, in either direction. It does not extend to arrays, tuples, or scalars, which hold their own identity like any distinct type.
 
@@ -227,7 +227,7 @@ let c: Foo    = Bar { "hi" };                   // error, a different nominal ty
 let m: Meters = 40;                             // a literal takes the type
 let n: Sint32 = 10;
 let d: Meters = n;                              // error, n is a typed Sint32
-let e: Meters = n as Meters;                    // an explicit `as` crosses
+let e: Meters = n as! Meters;                    // an explicit `as!` crosses
 ```
 
 A distinct type keeps the operations of its underlying, and each result keeps the distinct type. A literal operand adapts, a differently typed operand is cast.
@@ -236,7 +236,7 @@ A distinct type keeps the operations of its underlying, and each result keeps th
 let a: Meters = 10;
 let b: Meters = a + a;          // stays Meters
 let c: Meters = a + 1;          // the literal adapts
-let e: Meters = a + (5 as Meters);
+let e: Meters = a + (5 as! Meters);
 ```
 
 ## Embedding and subtype polymorphism
@@ -268,7 +268,7 @@ let p: &String = c.a.x;                  // the same field as c.x
 
 Either spelling is an lvalue, so an embedded field is addressable with `&` and binds to a reference like any other.
 
-A struct that embeds another is a *derived* type of it. A value of the derived type binds to a reference or pointer of the embedded *base* type with no cast, an implicit **downcast**. The reverse, an **upcast** from base to derived, is never implicit and is written as an explicit `as`. Both directions apply to references and pointers alike.
+A struct that embeds another is a *derived* type of it. A value of the derived type binds to a reference or pointer of the embedded *base* type with no cast, an implicit **downcast**. The reverse, an **upcast** from base to derived, is never implicit and is written as an explicit `as!`. Both directions apply to references and pointers alike.
 
 ```biron
 let d: &A = b;       // downcast, implicit, d.x is "Hi"
@@ -302,14 +302,14 @@ let peer = a * 4;                                  // 4 adopts a's type
 
 A literal paired with a typed operand simply takes that operand's type.
 
-## Explicit conversion with `as`
+## Explicit conversion with `as!`
 
-The `as` operator performs explicit numeric, pointer, and reference conversions. It is the way to cross between types the language will not convert implicitly, such as an enum and its underlying integer, `Length` and `Uint64`, or an `Address` and a typed pointer.
+The `as!` operator performs explicit numeric, pointer, and reference conversions. It is the way to cross between types the language will not convert implicitly, such as an enum and its underlying integer, `Length` and `Uint64`, or an `Address` and a typed pointer.
 
 ```biron
-let n = Color.Green as Sint32;   // enum to its underlying integer
-let d = (a / b) as Sint32;       // narrow a wide result
+let n = Color.Green as! Sint32;   // enum to its underlying integer
+let d = (a / b) as! Sint32;       // narrow a wide result
 ```
 
 > [!CAUTION]
-> A pointer or reference cast may **lower** or keep the alignment its referent needs, but it may not *raise* it. `*Uint8 as *Uint16` is rejected, since a byte pointer only promises one-byte alignment. `Address` is the one exemption, so `(p as Address) as *Uint16` is the explicit way to assert the real alignment.
+> A pointer or reference cast may **lower** or keep the alignment its referent needs, but it may not *raise* it. `*Uint8 as! *Uint16` is rejected, since a byte pointer only promises one-byte alignment. `Address` is the one exemption, so `(p as! Address) as! *Uint16` is the explicit way to assert the real alignment.
