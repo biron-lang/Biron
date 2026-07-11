@@ -103,7 +103,7 @@ A clobber records one location the instruction destroys that is not an operand. 
 
 ## Composition
 
-Because a block is a value of an ordinary type, it composes the way other values do. The operand list is built from constant expressions and shared constants, so a common sequence is factored out and reused. An asm type is also a generic argument like any other, so a routine is written once over an unknown block and specialized for each one. This is the same templating already available for the rest of the language, applied to assembly for free.
+Because a block is a value of an ordinary type, it composes the way other values do. The operand list is built from constant expressions and shared constants, so it is possible to factor out and reuse a common sequence. An asm type is also a generic argument like any other, so one routine can be written over an unknown block and specialized for each one. This is the same templating already available for the rest of the language, applied to assembly for free.
 
 ## Type checking
 
