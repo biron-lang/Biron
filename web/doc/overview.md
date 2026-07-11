@@ -40,26 +40,21 @@ An executable program has an entry point named `main`. Like any function it can 
 Here is a complete program that prints a greeting.
 
 ```biron
-import core.io
-import core.system
-
-using io::IO;
-using system::System;
-
+import core.io;
+import core.system;
 fn main() <System> {
-	with IO = System!.console;
-	io::print("Hello, World!");
+  with IO = System!.console;
+  io::print("Hello, world!\n");
 }
 ```
 
 Small as it is, this touches every central idea in Biron. Reading it top to bottom.
 
 - `import core.io` and `import core.system` pull in two core library modules. Each one defines an **effect**. `io` provides the `IO` effect (the ability to do input and output), and `system` provides the `System` effect (access to the host environment).
-- The two `using` lines bring the names `IO` and `System` into the file's scope so they may be written unqualified. This is a convenience only. Without them the effects would be spelled `io::IO` and `system::System` at each use.
 - `fn main() <System>` declares the entry point and says it needs the `System` effect. The program's `main` is handed a `System` effect implicitly, holding the host's implementations of everything the runtime can do.
 - `System!` reads the value of the established `System` effect, and `System!.console` selects the console handler out of it. That console happens to *be* an implementation of the `IO` effect.
 - `with IO = System!.console;` **establishes** the `IO` effect for the rest of the enclosing scope, using the console as its handler.
-- `io::print("Hello, World!")` needs the `IO` effect to run. Because the `with` above put one in scope, the call type checks and the greeting is printed. Had the `with` been missing, this line would be a compile-time error. `io::print` cannot perform IO out of thin air.
+- `io::print("Hello, world!\n")` needs the `IO` effect to run. Because the `with` above put one in scope, the call type checks and the greeting is printed. Had the `with` been missing, this line would be a compile-time error. `io::print` cannot perform IO out of thin air.
 
 That last point is the whole idea of the effect system in miniature. Doing IO is a capability that has to be threaded in from `main`, where the host grants it, down to the code that uses it. Nothing accesses the outside world by surprise.
 
@@ -71,17 +66,18 @@ The compiler is a single command. Building the program above into an executable 
 biron hello.biron -o hello
 ```
 
-This compiles the file, links it, and writes a runnable `hello`. To see what the compiler is doing to the code, dump flags print the intermediate forms it produces along the way. `--ast`, for instance, shows the parsed syntax tree. These are for inspection and debugging, not something needed for an ordinary build.
+This compiles the file, links it, and writes a runnable `hello`.
 
 ## Where to go next
 
 This overview is only the first taste. The rest of the manual works through the language in depth.
 
 - **Types** — the built-in scalars, `struct`/`union`/`enum`, tuples, arrays and slices, optionals, and Biron's structural-versus-nominal type identity.
-- **Expressions** — operators (including the `...` spread operator that splices a tuple, struct, or array into a comma-separated list), casts, aggregate literals, indexing, and flow-sensitive narrowing.
-- **Functions** — parameters, references, methods and associated functions, generics, function values, and `defer`.
+- **Expressions** — the operators (including the `...` spread that splices a tuple, struct, or array into a comma-separated list, and the `as!` and `as~` casts), indexing, and flow-sensitive narrowing.
+- **Functions & Methods** — parameters, references, methods and associated functions, generics, function values, and `defer`.
 - **Effects & Hermeticity** — declaring, establishing, and reading effects, and the `const` effects that are resolved at compile time.
-- **Modules** — organizing code across files and directories, imports, and visibility with `@(module)` and `@(export)`.
+- **Modules & Foreign** — organizing code across files and directories, imports, visibility with `@(module)` and `@(export)`, and linking external C symbols.
+- **The Compiler** — building a program, native or portable-C output, and the guarantees the compiler makes about its output.
 
 > [!TIP]
 > New to Biron? Read Types and Expressions next. They underpin everything else.
