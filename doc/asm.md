@@ -7,17 +7,14 @@ feature query. Two forms are provided. The expression form produces a callable v
 from an instruction and its operands. The naked form is used when the body of a whole
 function is written by hand.
 
-Inline assembly is not available yet. This chapter describes the feature as it is
-designed.
-
 ## An assembly block
 
 An assembly block is written with `asm`, a template string, and a list of operands.
-A function value is produced by the block, so it may be stored in a binding and
-called, or it may be called at once.
+A function value is produced by the block, so it may be stored in a `const` binding and
+called, or it may be called at once. The result of `asm(){}` is otherwise a constant expression.
 
 ```biron
-let add = asm("add %1, %0") {
+const add = asm("add %1, %0") {
 	asm::Reg { .Any, .Inout },   // operand 0
 	asm::Reg { .Any, .In },      // operand 1
 	asm::Clobber { "cc" },
@@ -31,7 +28,7 @@ Each operand is described by a value from the `asm` module. A register is writte
 
 Each operand is referred to inside the template by its position. The first operand is
 `%0`, the second `%1`, and so on. An operand appears in the template only when the
-instruction uses it. The `add` instruction uses two, while `syscall` uses none,
+instruction uses it. For example, the `add` instruction uses two, while `syscall` uses none,
 because a system call is passed its arguments in fixed registers.
 
 ## Inputs and outputs
@@ -39,21 +36,20 @@ because a system call is passed its arguments in fixed registers.
 The direction of a register operand decides how it is seen at the call. An input is
 passed in, an output is returned, and an in-out operand is both. The call arguments
 are the inputs and the in-out operands. The result is the outputs and the in-out
-operands. A single output is returned as a plain value, and several are returned as a
-tuple read with `.0` and `.1`.
+operands, though the in-out results are not returned. A single output is returned as a plain value, and several are returned as a tuple.
 
 ```biron
-let cpuid = asm("cpuid") {
+const cpuid = asm("cpuid") {
 	asm::Reg { .Rax, .Inout },   // leaf in, result out
 	asm::Reg { .Rbx, .Out },
 	asm::Reg { .Rcx, .Inout },   // subleaf in, result out
 	asm::Reg { .Rdx, .Out },
 };
-let r = cpuid(leaf, 0);          // r.0, r.1, r.2, r.3
+let r = cpuid(leaf, 0);        // r.0, r.1, r.2, r.3
 ```
 
-The width of a register is taken from the value. A `Uint32` is placed in a 32 bit
-register and a `Uint64` in a 64 bit register, so no width is written by hand.
+The width of a register is taken from the value, so a `Uint32` is placed in a 32 bit
+register and a `Uint64` in a 64 bit register. No width is written by hand.
 
 ## Memory operands
 
@@ -67,16 +63,16 @@ let fetch_add = asm("lock xadd %0, %1") {
 	asm::Mem { .Inout },         // updated in place
 	asm::Clobber { "cc" },
 };
-let old = fetch_add(delta, &counter);   // old value returned, counter holds the sum
+let old = fetch_add(delta, &counter); // old value returned, counter holds the sum
 ```
 
 ## Immediate values
 
 An immediate operand holds a constant that is known at compile time. It is always an
-input, and a write direction on one is rejected.
+input, and a write direction on one is rejected. The type of the immediate matters for instruction selection and width, so be sure to type them.
 
 ```biron
-asm::Imm { 42 },
+asm::Imm { 42 as Uint32 },
 ```
 
 ## Clobbers
@@ -99,33 +95,7 @@ a name could not be used inside the assembly. The return type still matters. A v
 type requires the result to be left in the return register, and the never type `!`
 marks a function that does not return.
 
-## setjmp and longjmp
-
-`setjmp` and `longjmp` are written as naked functions. The registers that must be
-preserved are saved by `setjmp`, which then returns zero. Those registers are restored
-by `longjmp`, which resumes at the saved point and does not return. `setjmp` is marked
-`@(returns_twice)`, because control returns to its caller once directly and again
-through `longjmp`.
-
-```biron
-type JmpBuf = struct { /* the saved registers */ }
-
-@(returns_twice)
-fn setjmp(*JmpBuf) -> Sint32 asm("...")      // saves registers, returns 0
-
-fn longjmp(*JmpBuf, Sint32) -> ! asm("...")  // restores registers, never returns
-```
-
-```biron
-let env: JmpBuf;
-if setjmp(&env) == 0 {
-	work(&env);          // longjmp(&env, 1) is called somewhere below
-} else {
-	recover();           // control resumes here after longjmp
-}
-```
-
 ## Safety
 
 Inline assembly can break the guarantees the rest of the language keeps, so the
-`unsafe` keyword is planned to be required for it. No effect is required.
+`unsafe` keyword is required to use it.
