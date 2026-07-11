@@ -19,7 +19,7 @@ fn main() <System> -> Sint32 {
 
 The dynamic linker is exposed as a `loader` interface with `open`, `link`, and `close` functions. It is present when the platform has a dynamic linker to capture, and none when it does not. A dynamic library is **always** resolved through this captured loader at runtime and never at build time. Static libraries are linked in at build time. The loader effect is covered in [Effects & Hermeticity](#effects), and the declaration of a foreign library in [Modules & Foreign](#modules).
 
-## Why static linking alone is not enough
+## Static linking isn't enough
 
 A statically linked executable contains the code of every library it depends on, so it is a single self-contained file, portable across machines and distributions (barring architectual differences). On some platforms, such as Linux and macOS, this comes at the price of the dynamic linker though as a statically linked libc typically precludes a working dynamic linker in the same process. Where that happens, `dlopen` and `dlsym` do not function, and things that depend on them are unavailable.
 
