@@ -115,7 +115,7 @@ fn kind(x: Variant) -> Sint32 {
 ```
 
 > [!NOTE]
-> The `of` operator also lives at level 8. It takes a property from a type or an
+> The `of` operator shares that same row. It takes a property from a type or an
 > expression, and it has its own chapter. See **Properties**.
 
 ## Checked division
