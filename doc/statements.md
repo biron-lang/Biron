@@ -1,17 +1,13 @@
 # Statements
 
-This chapter covers the statements that decide *what runs next*. These are blocks
-and the bindings they hold, branching with `if`, the three kinds of `for` loop,
-scheduled cleanup with `defer`, and `return`.
+This chapter covers the statements that decide *what runs next*. These are blocks and the bindings they hold, branching with `if`, the three kinds of `for` loop, scheduled cleanup with `defer`, and `return`.
 
 > [!RATIONALE]
 > Some languages make certain statements into expressions, so an `if` or a block can produce a value. Biron keeps statements and expressions separate. A statement is run for its effect on control flow and produces no value, and a value is produced only by an expression. The one conditional that needs to produce a value is written with the ternary `c ? a : b`, so nothing is lost by the separation while the grammar stays simple and unambiguous.
 
 ## Blocks and Scope
 
-A block is a run of statements between braces. Every block introduces a new
-lexical scope. Names bound inside it are visible only until the closing brace,
-and inner scopes may refer to names from the scopes that enclose them.
+A block is a run of statements between braces. Every block introduces a new lexical scope. Names bound inside it are visible only until the closing brace, and inner scopes may refer to names from the scopes that enclose them.
 
 ```biron
 fn main() -> Sint32 {
@@ -24,14 +20,11 @@ fn main() -> Sint32 {
 }
 ```
 
-Names resolve lexically outward through the enclosing blocks, so a function may
-freely read the locals of any block it is nested in.
+Names resolve lexically outward through the enclosing blocks, so a function may freely read the locals of any block it is nested in.
 
 ## let Bindings
 
-A `let` statement binds a name to a value in the current scope. *Either* a type
-annotation, an initializer, or both must be supplied. A bare `let x;` with
-neither is an error, because there is nothing to fix the type.
+A `let` statement binds a name to a value in the current scope. *Either* a type annotation, an initializer, or both must be supplied. A bare `let x;` with neither is an error, because there is nothing to fix the type.
 
 ```biron
 let sum = 0;            // type inferred from the initializer
@@ -39,16 +32,11 @@ let x: Sint32 = 5;      // type and value
 let acc: Sint32;        // type only, assigned later
 ```
 
-Redefining a name already bound in the *same* scope is an error. Shadowing is
-allowed only when the new binding lives in an inner scope (an `if` rung, a loop
-body, or a nested block).
+Redefining a name already bound in the *same* scope is an error. Shadowing is allowed only when the new binding lives in an inner scope (an `if` rung, a loop body, or a nested block).
 
 ## if and else
 
-An `if` takes a condition and a block, optionally followed by `else` (another
-block) or an `else if` rung. The condition must be a `Bool` (a sized boolean
-converts to `Bool` here), an optional (which is tested for presence), or an `is`
-type test.
+An `if` takes a condition and a block, optionally followed by `else` (another block) or an `else if` rung. The condition must be a `Bool` (a sized boolean converts to `Bool` here), an optional (which is tested for presence), or an `is` type test.
 
 ```biron
 if got == want {
@@ -71,10 +59,7 @@ if n < 0 {
 
 ### The if let init form
 
-An `if` may lead with a `let` init statement, written `if let x = ..; cond`.
-The binding is scoped to the *whole* `if`, covering its condition, its then
-branch, and its `else`. It is gone once the `if` finishes. This mirrors C++'s
-`if (init; cond)`.
+An `if` may lead with a `let` init statement, written `if let x = ..; cond`. The binding is scoped to the *whole* `if`, covering its condition, its then branch, and its `else`. It is gone once the `if` finishes. This mirrors C++'s `if (init; cond)`.
 
 ```biron
 if let x = 10; x > 5 {
@@ -84,9 +69,7 @@ if let x = 10; x > 5 {
 }
 ```
 
-Each rung of an `else if` chain has its *own* init, and each one shadows the
-previous rung's binding. A trailing `else` therefore sees the binding of the
-nearest `if` above it.
+Each rung of an `else if` chain has its *own* init, and each one shadows the previous rung's binding. A trailing `else` therefore sees the binding of the nearest `if` above it.
 
 ```biron
 fn shadow(sel: Sint32) -> Sint32 {
@@ -100,14 +83,11 @@ fn shadow(sel: Sint32) -> Sint32 {
 }
 ```
 
-The init also composes with optional narrowing. `if let r: ?Sint32 = 7; r`
-binds `r`, then the bare-identifier condition narrows it to the contained value
-inside the then branch.
+The init also composes with optional narrowing. `if let r: ?Sint32 = 7; r` binds `r`, then the bare-identifier condition narrows it to the contained value inside the then branch.
 
 ## for Loops
 
-Biron spells every loop `for`. There are three forms, and every loop condition
-must be a `Bool`.
+Biron spells every loop `for`. There are three forms, and every loop condition must be a `Bool`.
 
 ### Iterator form
 
@@ -125,9 +105,7 @@ for (item) in items {
 
 ### C-style form
 
-`for let i = 0; cond; post` provides an init binding, a condition, and a post
-step. The init, condition, and post are all scoped to the loop. A condition that
-is false on entry runs the body zero times.
+`for let i = 0; cond; post` provides an init binding, a condition, and a post step. The init, condition, and post are all scoped to the loop. A condition that is false on entry runs the body zero times.
 
 ```biron
 let sum = 0;
@@ -165,8 +143,7 @@ for n < 100 {
 
 ### break and continue
 
-Inside any loop, `break` leaves the loop immediately and `continue` skips to the
-next iteration. Both affect only the innermost enclosing loop.
+Inside any loop, `break` leaves the loop immediately and `continue` skips to the next iteration. Both affect only the innermost enclosing loop.
 
 ```biron
 for let i = 0; i < 100; i += 1 {
@@ -178,10 +155,7 @@ for let i = 0; i < 100; i += 1 {
 
 ## defer
 
-A `defer` statement schedules its body to run when the enclosing scope exits, on
-*every* path out. That covers falling off the end of the block, or a `return`
-that unwinds through it. Within one scope, multiple defers run in the reverse of
-their declaration order.
+A `defer` statement schedules its body to run when the enclosing scope exits, on *every* path out. That covers falling off the end of the block, or a `return` that unwinds through it. Within one scope, multiple defers run in the reverse of their declaration order.
 
 ```biron
 fn order(acc: &Sint32) {
@@ -192,9 +166,7 @@ fn order(acc: &Sint32) {
 }
 ```
 
-An early `return` from a nested scope runs the pending defers of each enclosing
-scope, innermost first, before the function actually returns. The return value
-is computed before any defer runs.
+An early `return` from a nested scope runs the pending defers of each enclosing scope, innermost first, before the function actually returns. The return value is computed before any defer runs.
 
 ```biron
 fn ret(acc: &Sint32, x: Sint32) -> Sint32 {
@@ -211,9 +183,7 @@ A `defer` body may not itself contain a nested `defer` or a `return`.
 
 ## return and Never-Returning Functions
 
-`return` hands control back to the caller, optionally with a value. A function
-whose return type is not unit must `return` a value on *every* control flow
-path. The compiler rejects a path that falls off the end without one.
+`return` hands control back to the caller, optionally with a value. A function whose return type is not unit must `return` a value on *every* control flow path. The compiler rejects a path that falls off the end without one.
 
 A function whose return type is `!` never returns to its caller.
 
@@ -224,8 +194,7 @@ fn spin() -> ! {
 }
 ```
 
-A function is also treated as never-returning if it calls such a function on
-every path. Because a `!` function cannot fall through, it needs no `return`.
+A function is also treated as never-returning if it calls such a function on every path. Because a `!` function cannot fall through, it needs no `return`.
 
 ## Other statements
 
