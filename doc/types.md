@@ -76,6 +76,7 @@ From any type `T` a new type can be built. These constructors are the heart of t
 | Written | Meaning |
 | --- | --- |
 | `*T` | pointer to `T` |
+| `[*]T` | many-item pointer to `T`, indexable and sliceable |
 | `&T` | reference to `T` |
 | `?T` | optional `T` |
 | `@T` | atomic `T` (integer or pointer only) |
@@ -88,7 +89,7 @@ From any type `T` a new type can be built. These constructors are the heart of t
 | `(A, B, ...)` | tuple |
 | `fn(params) -> R` | function type |
 
-A slice `[]T` is a fat pointer of a data pointer and a length, like `String`. A fixed array `[N]T` is a value type of `N` contiguous elements, while an enumerated array `[enum; E]T` is indexed by an enum's members instead of by integers. The growable kinds `[static; N]T`, `[dynamic]T`, and `[dynamic; N]T` are covered in **Arrays** below.
+A slice `[]T` is a fat pointer of a data pointer and a length, like `String`. A many-item pointer `[*]T` has the same representation as `*T`, and unlike a plain `*T` it can be indexed and sliced. Slicing it with an upper bound produces a `[]T`, while slicing it without one produces another `[*]T`. A fixed array `[N]T` is a value type of `N` contiguous elements, while an enumerated array `[enum; E]T` is indexed by an enum's members instead of by integers. The growable kinds `[static; N]T`, `[dynamic]T`, and `[dynamic; N]T` are covered in **Arrays** below.
 
 ```biron
 fn sum4(a: [4]Sint32) -> Sint32 { return a[0] + a[1] + a[2] + a[3]; }
@@ -138,7 +139,7 @@ A pointer `*T` is the explicit counterpart. It is written and read out in the op
 
 An array holds a run of elements of one type. Four kinds cover everything from a plain fixed block to a fully dynamic sequence. They differ only in where the elements are stored and whether the count can grow.
 
-A fixed array `[N]T` is a value of exactly `N` contiguous elements. Its length is always `N`, and it copies whole, like any value.
+A fixed array `[N]T` is a value of exactly `N` contiguous elements. Its length is always `N`, and it copies whole, like any value. The size `N` is a constant of type `Length`. An untyped literal coerces to `Length`, and a constant of any other integer type is rejected.
 
 ```biron
 let pt = [3]Sint32 { 1, 2, 3 };      // three elements, always three

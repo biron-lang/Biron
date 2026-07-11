@@ -78,6 +78,23 @@ let r = &t.1;       // r: *Sint32, interior pointer to the tuple field
 
 Because a reference is transparent, taking its address gives a pointer to its *referent*, not to the reference's own slot. So for `x: &T`, the expression `&x` has type `*T`. (A pointer to a reference, `*&T`, is meaningless and rejected, whereas a reference to a pointer, `&*T`, is fine.)
 
+## Many-item pointers
+
+A many-item pointer `[*]T` has the same machine representation as `*T`, a bare address with no length. Unlike a plain `*T` it may be indexed and sliced. Indexing `p[i]` yields a reference `&T` to the element at that offset, so it is an lvalue that reads as a copy, binds as a reference, and can be assigned. A plain `*T` allows neither indexing nor slicing.
+
+Slicing a many-item pointer forms a length only when an upper bound is given. `p[:hi]` and `p[lo:hi]` produce a `[]T` slice of `hi - lo` elements starting at `lo`. `p[lo:]` has no upper bound and no length to form, so it stays a `[*]T` advanced by `lo`.
+
+The two pointer kinds do not convert on their own. A `*T` becomes a `[*]T` with an explicit `as` cast, an assertion that the address points at a run of elements. A `[*]T` becomes a `*T` by taking the address of an element, so `&p[0]` is the pointer to the first element.
+
+```biron
+let x: [4]Uint8;
+let p = &x[0] as [*]Uint8;   // an explicit as forms a many-item pointer
+let first: Uint8 = p[0];     // indexing yields the element
+let rest = p[1:];            // no upper bound, still a [*]Uint8
+let two: []Uint8 = p[:2];    // an upper bound forms a []Uint8
+let back: *Uint8 = &p[0];    // a plain pointer to the first element
+```
+
 ## The value / reference conversion matrix
 
 Every crossing between a value `T` and a reference `&T`, at a binding, a call argument, a `return`, or an assignment, follows one of four rules.

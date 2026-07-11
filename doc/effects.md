@@ -174,3 +174,34 @@ fn caller() -> Sint32 {
 ```
 
 When the function is instantiated, `<T>` becomes `<Effect>` and `T!` becomes `Effect!`. The binding can come by inference or by an explicit turbofish (`via_runtime::[Effect](arg)`), and it works for both runtime and `const` effects. The type bound to `T` must be a named type.
+
+## The `Caller` effect
+
+`Caller` is provided by the compiler rather than established with `with`. It is a struct describing the call site.
+
+```biron
+struct Caller {
+	address:    Address,   // the caller function's entry address
+	expression: String,    // the call, stringized from its source
+	file:       String,    // the source file the call is in
+	line:       Uint32,    // the source line of the call
+	column:     Uint16,    // the source column of the call
+}
+```
+
+A function requires it the way it requires any effect, and reads it with `Caller!` (a field as `Caller!.line`). What differs is establishment. A caller never writes `with Caller = ...`. Because the compiler provides it, a call to a function that requires `Caller` is always allowed, and the compiler synthesizes the frame at the call. Every field is a compile-time constant, so the frame is one `static const` value whose address is handed over.
+
+```biron
+fn assert(x: Bool) <Caller> {
+	if x { return; }
+	let c = Caller!;
+	// c.file, c.line, c.column, and c.expression point at the failing call
+}
+
+fn main() -> Sint32 {
+	assert(1 + 1 == 2);                // no `with` needed
+	return 0;
+}
+```
+
+A function that itself declares `Caller` forwards its own frame to a nested call, so the frame names the original call site rather than the intermediate one, the way a caller-location attribute works in other languages. A caller may still override the frame with `with Caller = ...`, and `drop Caller` reverts later calls to fresh synthesis.

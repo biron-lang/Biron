@@ -148,6 +148,12 @@ fn main() -> Sint32 {
 The block name (`libc`) is only the `libc::member` namespace. The library to bind is
 named by `@(link)`, and the two need not agree.
 
+A foreign block obeys the same visibility attributes as any other declaration, with one
+limit. `@(module)` on the block shares its `libc::member` functions with the sibling files
+of the module, and each such file uses them as the external symbols they are. `@(export)`
+on a foreign block is rejected, since a foreign symbol is external already and widening it
+past the module would mean nothing.
+
 ### Link time vs runtime
 
 The first argument of `@(link)` chooses *when* symbols are resolved.

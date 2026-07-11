@@ -15,6 +15,7 @@ const CHAPTERS = [
   { slug: 'generics',        title: 'Generics' },
   { slug: 'attributes',      title: 'Constants & Attributes' },
   { slug: 'modules',         title: 'Modules & Foreign' },
+  { slug: 'asm',             title: 'Inline Assembly' },
   { slug: 'compiler',        title: 'The Compiler' },
 ];
 
