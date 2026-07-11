@@ -246,3 +246,13 @@ fn[N: Uint32] Box::val() -> Sint32 { return N as Sint32; }
 
 Box::val::[9]();    // 9
 ```
+
+The prefix may itself be a type generic. When it is, the concrete type written before
+`::` at the call binds that generic, so `Sint32::zero()` fixes `T` to `Sint32` before
+argument inference settles any others.
+
+```biron
+fn[T: Type] T::zero() -> T { return {}; }
+
+let n = Sint32::zero();    // T is Sint32, n is 0
+```
