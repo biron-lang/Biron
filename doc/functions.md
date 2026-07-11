@@ -174,9 +174,9 @@ fn(p: P, k: Sint32, on: Bool) blend(extra: Sint32) -> Sint32 {
 > not the multi-argument form.
 
 > [!TIP]
-> The explode operator `~` produces the same spread from an existing aggregate.
+> The spread operator `...` produces the same spread from an existing aggregate.
 > `(~pair).store(40)` splices `pair`'s elements into the receiver group, and a
-> `&T` element still aliases the original. `~` works the same way in ordinary
+> `&T` element still aliases the original. `...` works the same way in ordinary
 > call arguments and aggregate literals.
 
 ## Associated functions
@@ -200,7 +200,7 @@ Every other rule of a normal function applies, including generics and effects. A
 
 ```biron
 type Box = struct { v: Sint32 }
-fn[N: Uint32] Box::val() -> Sint32 { return N as Sint32; }
+fn[N: Uint32] Box::val() -> Sint32 { return N as! Sint32; }
 
 Box::val::[9]();    // 9
 ```

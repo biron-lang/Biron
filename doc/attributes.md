@@ -108,9 +108,9 @@ type Packed = struct { a: Uint8, b: Uint32, c: Uint8 }
 
 fn use() {
 	let p: Packed;
-	p.a = 1 as Uint8;
+	p.a = 1 as! Uint8;
 	p.b = 1000;        // read and assign the whole field, never &p.b
-	p.c = 2 as Uint8;
+	p.c = 2 as! Uint8;
 }
 ```
 
@@ -145,7 +145,7 @@ type Packed = struct { a: Uint8, b: Uint64, c: Uint8 }   // opt in
 
 fn use() {
 	// A binding-level reorder on an inline tuple type.
-	@(reorder(false)) let v: (Uint8, Uint64) = (7 as Uint8, 8 as Uint64);
+	@(reorder(false)) let v: (Uint8, Uint64) = (7 as! Uint8, 8 as! Uint64);
 }
 ```
 

@@ -15,7 +15,7 @@ The table below lists the binary operators from loosest to tightest. A tighter o
 | 5 | `&` | bitwise and |
 | 6 | `==` `!=` | equality |
 | 7 | `<` `<=` `>` `>=` | ordering |
-| 8 | `of` `<?` `>?` `as` `is` | property, min, max, cast, type test |
+| 8 | `of` `<?` `>?` `as!` `as~` `is` | property, min, max, logical cast, bitwise cast, type test |
 | 9 | `<<` `>>` | bit shifts |
 | 10 | `+` `-` | add, subtract |
 | 11 (tightest) | `*` `/` `%` | multiply, divide, remainder |
@@ -27,7 +27,7 @@ Prefix and postfix operators bind tighter than every binary operator, and the po
 | Position | Operators | Meaning |
 |----------|-----------|---------|
 | Postfix (tightest) | `f(args)`, `a[i]`, `a[lo:hi]`, `x.field`, `x!`, `x::[T]` | call, index, slice, member or tuple access, force, generic instantiation |
-| Prefix | `-`, `!`, `~`, `*`, `&` | negate, logical or bitwise not, explode, dereference, address-of |
+| Prefix | `-`, `!`, `~`, `...`, `*`, `&` | negate, logical not, bitwise not, spread, dereference, address-of |
 
 Parentheses `( ... )` group a sub-expression and override all of this, and `[ ... ]` after a value is always an index or a slice, never grouping. Both `*` and `&` do double duty. Each is a binary operator (`a * b` multiplies, `a & b` is a bitwise and) and, in prefix position, a unary operator (`*p` dereferences, `&x` takes an address). The position decides which.
 
@@ -54,21 +54,21 @@ The six comparison operators `==` `!=` `<` `<=` `>` `>=` compare two values of t
 if got == want { return 0; }
 ```
 
-## Logical and not
+## Logical
 
-`&&` and `||` combine `Bool` values into a `Bool`. The prefix `!` is Rust-style. It is **logical not on a `Bool`**, but **bitwise not on an integer**.
+`&&` and `||` combine `Bool` values into a `Bool`, and the prefix `!` is logical not. All three apply only to `Bool`, so a logical operator on any other type is rejected.
 
 ```biron
 let stop = done && ready;   // Bool and Bool
 let flip = !ready;          // Bool -> Bool
-let mask = !bits;           // integer -> integer (bitwise complement)
 ```
 
 ## Bitwise
 
-The bitwise operators `&` `|` `^` operate on integers, and `<<` `>>` shift an integer left or right.
+The bitwise operators `&` `|` `^` operate on integers, the prefix `~` is bitwise not (a complement), and `<<` `>>` shift an integer left or right.
 
 ```biron
+let mask = ~bits;           // integer -> integer (complement)
 let both = a & b;
 let any  = a | b;
 let diff = a ^ b;
@@ -90,15 +90,25 @@ So `3 <? 7` is `3` and `3 >? 7` is `7`.
 
 ## Casts and type tests
 
-`a as T` is an explicit cast. It converts between numeric types, recovers a typed pointer from `Address`, and crosses an enum with its underlying integer. Since integer and float literals are untyped, a cast is also how a literal is pinned to a specific type.
+A cast is explicit and takes one of two forms. A bare `as` is never written on its own.
+
+The logical cast `a as! T` produces the value of `T` that corresponds to `a`. It converts between numeric types, crosses an enum with its underlying integer, recovers a typed pointer from `Address`, and reinterprets one pointer, reference, or function type as another. Since integer and float literals are untyped, a logical cast is also how a literal is pinned to a specific type.
 
 ```biron
-let n = 10 as Uint64;
-let f = 3.5 as Real32;
-let i = (f * 2.0 as Real32) as Sint32;
+let n = 10 as! Uint64;
+let f = 3.5 as! Real32;
+let i = (f * 2.0 as! Real32) as! Sint32;
 ```
 
-`a is T` is a type test that yields a `Bool`. It is most useful on a `union` value, where it checks the stored variant. Used as a condition, it also narrows the value to `&T` (a reference into its storage) inside the branch.
+The bitwise cast `a as~ T` reinterprets the bits of `a` as a `T` with no conversion for two types of the same size, anything else is an error. Where a logical cast would alter the bits, a bitwise cast leaves them unchanged.
+
+```biron
+let x: Real32 = 1.5
+let bits = x as~ Uint32;     // the IEEE-754 pattern, 0x3FC00000
+let same = bits as~ Real32;  // back to 1.5
+```
+
+`a is T` is a type test that yields a `Bool`. It is used on a `union` value, where it checks the stored variant. Used as a condition, it also narrows the value to `&T` (a reference into its storage) inside the branch.
 
 ```biron
 fn kind(x: Variant) -> Sint32 {
@@ -112,14 +122,6 @@ fn kind(x: Variant) -> Sint32 {
 > [!NOTE]
 > The `of` operator also lives at level 8. It takes a property from a type or an
 > expression, and it has its own chapter. See **Properties**.
-
-## The force operator
-
-A postfix `!` is the force operator, an assertion. It keeps the operand's type unchanged, so it is **not** an optional unwrap.
-
-```biron
-let y = x!;   // same type as x
-```
 
 ## Checked division
 
@@ -195,13 +197,13 @@ Because the ternary is right associative, an `else if` ladder reads naturally.
 let r = a > 100 ? 1 : b > 100 ? 2 : 3;
 ```
 
-## Explode
+## Spread
 
-The prefix `~x` is the explode (or spread) operator. It splices the elements of a tuple, struct, or fixed array into a comma-separated list, so one aggregate can fill several positions at once.
+The prefix `...x` is the spread operator. It splices the elements of a tuple, struct, or fixed array into a comma-separated list, so one aggregate can fill several positions at once.
 
 ```biron
 let t = (1, 2, 3);
-let s = sum3(~t);          // same as sum3(t.0, t.1, t.2)
+let s = sum3(...t);        // same as sum3(t.0, t.1, t.2)
 ```
 
-Explode works in call arguments, aggregate literals, and method receivers. See the [Aggregates](#aggregates) chapter for the full story.
+Spread works in call arguments, aggregate literals, and method receivers. See the [Aggregates](#aggregates) chapter for the full story.

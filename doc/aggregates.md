@@ -1,6 +1,6 @@
 # Aggregates & Literals
 
-Aggregates are the compound values of Biron, namely structs, arrays, tuples, and enums. Each has a literal form for building a value directly in source. This chapter walks through those forms, the rules that govern how their fields and elements are filled, and a few conveniences (implicit enum selectors, swizzles, and the explode operator) that make working with them concise.
+Aggregates are the compound values of Biron, namely structs, arrays, tuples, and enums. Each has a literal form for building a value directly in source. This chapter walks through those forms, the rules that govern how their fields and elements are filled, and a few conveniences (implicit enum selectors, swizzles, and the spread operator) that make working with them concise.
 
 ## Struct literals
 
@@ -130,10 +130,10 @@ A member is accessed with `Color.Green`, which is a value of the enum type.
 let c: Color = Color.Green;
 ```
 
-Enums are **strongly typed**. An enum never implicitly becomes its underlying integer and an integer never implicitly becomes an enum. Two distinct enums do not coerce to one another. The boundary is crossed explicitly with `as`.
+Enums are **strongly typed**. An enum never implicitly becomes its underlying integer and an integer never implicitly becomes an enum. Two distinct enums do not coerce to one another. The boundary is crossed explicitly with `as!`.
 
 ```biron
-let n = Color.Blue as Sint32;   // 2
+let n = Color.Blue as! Sint32;   // 2
 ```
 
 ### Implicit enum selectors
@@ -164,28 +164,28 @@ let yx  = v.yx;   // reordered, gathered into a new [2]Sint32
 v.x = 7;          // writes component 0
 ```
 
-## Tuple explosion
+## Tuple spread
 
-The explode operator `~x` splices the elements of a tuple, struct, or fixed array into a comma-separated list. It works in call arguments, aggregate literals, and method receivers.
+The spread operator `...x` splices the elements of a tuple, struct, or fixed array into a comma-separated list. It works in call arguments, aggregate literals, and method receivers.
 
 ```biron
 fn sum3(a: Sint32, b: Sint32, c: Sint32) -> Sint32 { return a + b + c; }
 
 let t = (1, 2, 3);
-let r = sum3(~t);          // sum3(1, 2, 3)
+let r = sum3(...t);          // sum3(1, 2, 3)
 
 let p = (20, 30);
-let m = sum3(10, ~p);      // mixes with ordinary arguments
+let m = sum3(10, ...p);      // mixes with ordinary arguments
 ```
 
-Explode also builds larger aggregates from smaller ones.
+Spread also builds larger aggregates from smaller ones.
 
 ```biron
 type Vec = struct { x: Sint32, y: Sint32, z: Sint32 }
 
 let a = (1, 2);
-let b = (0, ~a, 3);        // the tuple (0, 1, 2, 3)
-let v = Vec { 7, ~a };     // { x = 7, y = 1, z = 2 }
+let b = (0, ...a, 3);        // the tuple (0, 1, 2, 3)
+let v = Vec { 7, ...a };     // { x = 7, y = 1, z = 2 }
 ```
 
 And it spreads into a multi-value method receiver.
@@ -194,5 +194,5 @@ And it spreads into a multi-value method receiver.
 fn(a: Sint32, b: &Sint32) store(v: Sint32) { b = a + v; }
 
 let r = (2, 0);
-(~r).store(40);            // spreads r into the (a, b) receiver
+(...r).store(40);            // spreads r into the (a, b) receiver
 ```

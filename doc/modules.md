@@ -122,7 +122,7 @@ foreign libc {
 
 fn main() -> Sint32 {
 	libc::printf("abs = %d\n", libc::abs(0 - 7));
-	return libc::strlen("hello") as Sint32;   // 5
+	return libc::strlen("hello") as! Sint32;   // 5
 }
 ```
 

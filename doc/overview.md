@@ -78,7 +78,7 @@ This compiles the file, links it, and writes a runnable `hello`. To see what the
 This overview is only the first taste. The rest of the manual works through the language in depth.
 
 - **Types** — the built-in scalars, `struct`/`union`/`enum`, tuples, arrays and slices, optionals, and Biron's structural-versus-nominal type identity.
-- **Expressions** — operators (including the `~` explode operator that splices a tuple, struct, or array into a comma-separated list), casts, aggregate literals, indexing, and flow-sensitive narrowing.
+- **Expressions** — operators (including the `...` spread operator that splices a tuple, struct, or array into a comma-separated list), casts, aggregate literals, indexing, and flow-sensitive narrowing.
 - **Functions** — parameters, references, methods and associated functions, generics, function values, and `defer`.
 - **Effects & Hermeticity** — declaring, establishing, and reading effects, and the `const` effects that are resolved at compile time.
 - **Modules** — organizing code across files and directories, imports, and visibility with `@(module)` and `@(export)`.
