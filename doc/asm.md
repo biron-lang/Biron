@@ -16,7 +16,7 @@ const add = asm("add %1, %0") {
 };
 ```
 
-The same value is written with the type on the binding, or through a named alias that a generic reuses.
+Since it is a type like any other, it can also be written as an explicit type on the named binding, or through a named type too.
 
 ```biron
 const add2: asm("add %1, %0") = {
