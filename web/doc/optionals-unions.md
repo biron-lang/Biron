@@ -42,6 +42,9 @@ fn opt_or(o: ?Sint32, d: Sint32) -> Sint32 {
 > [!IMPORTANT]
 > Only a bare identifier condition narrows. A condition that is neither a `Bool` nor an optional is an error, so something that has no presence cannot be accidentally tested.
 
+> [!NOTE]
+> `is` is the variant test of a `union`, so it does not apply to an optional. An optional is checked with `if` alone, and `x is T` on an optional is rejected.
+
 ### Narrowing binds by reference
 
 The narrowed name is a reference into the original storage, not a copy. That makes it an lvalue. Assigning to it inside the branch writes the value back, leaving the optional present. A later test observes the new value.

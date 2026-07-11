@@ -7,6 +7,7 @@ const CHAPTERS = [
   { slug: 'expressions',     title: 'Expressions' },
   { slug: 'statements',      title: 'Statements' },
   { slug: 'aggregates',      title: 'Aggregates & Literals' },
+  { slug: 'initialization',  title: 'Initialization' },
   { slug: 'functions',       title: 'Functions & Methods' },
   { slug: 'effects',         title: 'Effects & Hermeticity' },
   { slug: 'optionals-unions',title: 'Optionals & Unions' },
