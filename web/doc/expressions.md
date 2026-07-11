@@ -4,21 +4,16 @@ An expression computes a value. Biron builds larger expressions out of smaller o
 
 ## Precedence and associativity
 
-The table below lists the binary operators from loosest to tightest. A tighter operator binds to its operands first, so `1 + 2 * 3` is `1 + (2 * 3)`.
+The table below lists the binary operators from loosest to tightest. A tighter operator binds to its operands first, so `1 + 2 * 3` is `1 + (2 * 3)`. Operators sharing a row have the same precedence and chain left to right.
 
-| Level | Operators | Meaning |
-|-------|-----------|---------|
-| 1 (loosest) | `\|\|` | logical or |
-| 2 | `&&` | logical and |
-| 3 | `\|` | bitwise or |
-| 4 | `^` | bitwise xor |
-| 5 | `&` | bitwise and |
-| 6 | `==` `!=` | equality |
-| 7 | `<` `<=` `>` `>=` | ordering |
-| 8 | `of` `<?` `>?` `as!` `as~` `is` | property, min, max, logical cast, bitwise cast, type test |
-| 9 | `<<` `>>` | bit shifts |
-| 10 | `+` `-` | add, subtract |
-| 11 (tightest) | `*` `/` `%` | multiply, divide, remainder |
+| Operators | Meaning |
+|-----------|---------|
+| `\|\|` | logical or |
+| `&&` | logical and |
+| `==` `!=` `<` `<=` `>` `>=` | equality and ordering |
+| `of` `<?` `>?` `as!` `as~` `is` | property, min, max, logical cast, bitwise cast, type test |
+| `+` `-` `\|` `^` | add, subtract, bitwise or, bitwise xor |
+| `*` `/` `%` `&` `<<` `>>` | multiply, divide, remainder, bitwise and, shifts |
 
 Every binary operator is **left associative**, so `a - b - c` is `(a - b) - c`.
 
@@ -32,7 +27,7 @@ Prefix and postfix operators bind tighter than every binary operator, and the po
 Parentheses `( ... )` group a sub-expression and override all of this, and `[ ... ]` after a value is always an index or a slice, never grouping. Both `*` and `&` do double duty. Each is a binary operator (`a * b` multiplies, `a & b` is a bitwise and) and, in prefix position, a unary operator (`*p` dereferences, `&x` takes an address). The position decides which.
 
 > [!IMPORTANT]
-> Two precedences differ from C and are worth remembering. The shifts `<<` `>>` (level 9) bind *tighter* than `+` `-`, so `a + b << c` means `a + (b << c)`. And the bitwise `&` `|` `^` bind looser than the comparisons, so they must be parenthesized when mixed. Write `(a & mask) == 0`, not `a & mask == 0`.
+> Unlike C, the bitwise operators bind with the arithmetic they resemble. `&` sits at the multiply tier and `|` `^` at the add tier, so all three bind *tighter* than the comparisons. `a & mask == 0` therefore reads as `(a & mask) == 0` and needs no parentheses. The shifts `<<` `>>` bind at the multiply tier too, so `a + b << c` is `a + (b << c)`.
 
 The ternary `c ? a : b` is looser than every binary operator and is **right associative**, so `a ? b : c ? d : e` groups as `a ? b : (c ? d : e)`.
 
@@ -78,7 +73,7 @@ let down = a >> 5;
 
 ## Minimum and maximum
 
-`a <? b` is the minimum of the two operands and `a >? b` is the maximum. Both sit at level 8 and, like every binary operator, chain left to right, so `lo >? x <? hi` clamps `x` into `[lo, hi]`. Each operand is evaluated exactly once, which is the whole point of having them.
+`a <? b` is the minimum of the two operands and `a >? b` is the maximum. Both sit at the same precedence as the casts and `is`, and like every binary operator chain left to right, so `lo >? x <? hi` clamps `x` into `[lo, hi]`. Each operand is evaluated exactly once, which is the whole point of having them.
 
 ```biron
 fn clamp(x: Sint32, lo: Sint32, hi: Sint32) -> Sint32 {
