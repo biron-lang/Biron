@@ -69,7 +69,7 @@ The direction of a register operand decides how it is seen at the call. An input
 For example, CPUID reads four result registers from a leaf and a subleaf.
 
 ```biron
-const cpuid: asm("cpuid") = {
+const cpuid = asm("cpuid") {
 	asm::Reg { .Rax, .Inout },   // leaf in, result out
 	asm::Reg { .Rbx, .Out },
 	asm::Reg { .Rcx, .Inout },   // subleaf in, result out
@@ -87,7 +87,7 @@ A memory operand is passed a pointer, and the instruction reads or writes that m
 For example, an atomic fetch and add returns the old value and leaves the sum in memory.
 
 ```biron
-const fetch_add: asm("lock xadd %0, %1") = {
+const fetch_add = asm("lock xadd %0, %1") {
 	asm::Reg { .Any, .Inout },   // added in, old value out
 	asm::Mem { .Inout },         // updated in place
 	asm::Clobber { "cc" },
@@ -113,9 +113,11 @@ A clobber records one location the instruction destroys that is not an operand. 
 A block with an empty template and only a `"memory"` clobber is a compiler memory barrier. It emits no instruction, and it orders the surrounding loads and stores so that none are moved across it.
 
 ```biron
-const barrier = asm("") { asm::Clobber { "memory" } };
-unsafe { barrier() };
+unsafe { asm("") { asm::Clobber { "memory" } }(); }
 ```
+
+> [!NOTE]
+> Since an asm value is a type like any other, it can also be invoked immediately, as in the example above.
 
 ## Composition
 
@@ -134,10 +136,7 @@ The two examples below on x86-64 use more of the operand model, together with th
 A 128 bit compare and exchange with `CMPXCHG16B`. The expected value is held in the rdx and rax pair and the desired value in the rcx and rbx pair, the address is in rsi, and the zero flag reports whether the exchange happened.
 
 ```biron
-const cas16: asm("
-	lock cmpxchg16b (%rsi)
-	setz %r8b
-") = {
+const cas16 = asm("lock cmpxchg16b (%rsi); setz %r8b") {
 	asm::Reg { .Rax, .Inout },   // expected low in, old low out
 	asm::Reg { .Rdx, .Inout },   // expected high in, old high out
 	asm::Reg { .Rbx, .In },      // desired low
@@ -147,44 +146,25 @@ const cas16: asm("
 	asm::Clobber { "memory" },
 	asm::Clobber { "cc" },
 };
-let (old_lo, old_hi, ok) = unsafe { cas16(exp_lo, exp_hi, new_lo, new_hi, addr) };
-```
-
-A contended spin lock that pauses the core with `UMONITOR` and `UMWAIT` rather than busy looping. The lock word is monitored, and the core is held until a store to it or a timeout, so the wait uses almost no power.
-
-```biron
-const spin_lock: asm("
-1:
-	xor  %eax, %eax
-	mov  $1, %ecx
-	lock cmpxchgl %ecx, (%rdi)   # 0 -> 1 acquires the lock
-	jz   3f
-2:
-	umonitor %rdi                # arm the monitor on the lock word
-	cmpl $0, (%rdi)
-	jz   1b                      # free again, retry the acquire
-	xor  %edx, %edx
-	xor  %eax, %eax              # no deadline
-	xor  %ecx, %ecx              # the deepest wait state
-	umwait %ecx                  # sleep until a store or a timeout
-	jmp  1b
-3:
-") = {
-	asm::Reg { .Rdi, .In },      // pointer to the lock word
-	asm::Clobber { "rax" },
-	asm::Clobber { "rcx" },
-	asm::Clobber { "rdx" },
-	asm::Clobber { "memory" },
-	asm::Clobber { "cc" },
-};
-unsafe { spin_lock(&lock); }
+let result = unsafe { cas16(exp_lo, exp_hi, new_lo, new_hi, addr) };
+// result.0 = old_lo
+// result.1 = old_hi
+// result.2 = ok
 ```
 
 ## Naked functions
 
 When an asm block is written in place of a function body, the function is naked. No entry or exit code is added, and the body is the whole function. The arguments arrive in the registers of the calling convention, and the return value is left in the register the convention expects, so those registers are used directly. A naked function is written with no operand list.
 
+```biron
+fn foo(Args) -> Rets asm("
+	// instructions
+");
+```
+
 The parameters of a naked function are written as types alone, with no names, because a name could not be used inside the assembly. The return type still matters. A value type requires the result to be left in the return register, and the never type `!` marks a function that does not return.
+
+A naked function cannot have a receiver and cannot be generic. In every other respect it is an ordinary function. It can take attributes and be an associated function. A call on it needs an `unsafe` block, the same as a call on an asm value.
 
 ## Safety
 
