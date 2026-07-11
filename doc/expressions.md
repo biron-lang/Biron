@@ -103,6 +103,9 @@ let bits = x as~ Uint32;     // the IEEE-754 pattern, 0x3FC00000
 let same = bits as~ Real32;  // back to 1.5
 ```
 
+> [!RATIONALE]
+> The suffix mirrors the matching prefix operator. `!` is logical not and `~` is bitwise not, so `as!` is the logical cast and `as~` is the bitwise cast. The same sigil means the same thing whether it leads an operand or trails an `as`.
+
 `a is T` is a type test that yields a `Bool`. It is used on a `union` value, where it checks the stored variant. Used as a condition, it also narrows the value to `&T` (a reference into its storage) inside the branch.
 
 ```biron
