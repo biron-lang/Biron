@@ -131,7 +131,8 @@ fn take_box(b: Box::[Sint32]) -> Sint32       { return 1; }
 fn take_box_again(b: Box::[Sint32]) -> Sint32 { return 2; }  // same type
 ```
 
-A generic body is type-checked once, with type generics treated as abstract types and value generics as constants, so an error in the template is reported in the template rather than at every use.
+> [!NOTE]
+> A generic body is type-checked once, with type generics treated as abstract types and value generics as constants, so an error in the template is reported in the template rather than at every use.
 
 ## Generic methods
 

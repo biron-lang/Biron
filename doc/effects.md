@@ -173,7 +173,10 @@ fn caller() -> Sint32 {
 }
 ```
 
-When the function is instantiated, `<T>` becomes `<Effect>` and `T!` becomes `Effect!`. The binding can come by inference or by an explicit turbofish (`via_runtime::[Effect](arg)`), and it works for both runtime and `const` effects. The type bound to `T` must be a named type.
+When the function is instantiated, `<T>` becomes `<Effect>` and `T!` becomes `Effect!`. The binding can come by inference or by an explicit turbofish (`via_runtime::[Effect](arg)`), and it works for both runtime and `const` effects.
+
+> [!IMPORTANT]
+> The type bound to `T` must be a named type.
 
 ## The `Caller` effect
 

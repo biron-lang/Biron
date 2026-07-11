@@ -172,7 +172,10 @@ let e = 2 * a;                 // the scalar may sit on either side
 
 The scalar special cases hold per element. For an integer element type, `/` and `%` produce an optional exactly as scalar checked division does, so `[2]Uint32 / Uint32` and `[2]Uint32 / [2]Uint32` both yield `?[2]Uint32`, `none` when any divisor element is zero, unless the divide sits in an `@(unsafe_div)` scope. The bitshift operators are likewise available for integer element types.
 
-Equality compares component by component and reduces to a single `Bool`, true only when every element matches. `==` and `!=` are the only comparisons permitted. The relational operators `<`, `<=`, `>`, and `>=` are rejected on arrays, since no single ordering is meaningful.
+Equality compares component by component and reduces to a single `Bool`, true only when every element matches. `==` and `!=` are the only comparisons permitted.
+
+> [!CAUTION]
+> The relational operators `<`, `<=`, `>`, and `>=` are rejected on arrays, since no single ordering is meaningful.
 
 ## The ternary operator
 

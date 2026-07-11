@@ -14,7 +14,10 @@ The compiler reads the source, checks it, compiles it, links it, and writes a ru
 
 ## Native executables or portable C
 
-By default the compiler produces a native executable. It can instead emit **portable C** that any ordinary C compiler can build. Both outputs pass through the same optimized, low-level intermediate representation, so the native binary and the generated C describe the same program. The C output is useful for bootstrapping onto a platform that has a C toolchain but no native backend of its own.
+By default the compiler produces a native executable. It can instead emit **portable C** that any ordinary C compiler can build. Both outputs pass through the same optimized, low-level intermediate representation, so the native binary and the generated C describe the same program.
+
+> [!NOTE]
+> The C output is useful for bootstrapping onto a platform that has a C toolchain but no native backend of its own.
 
 ## Speed
 
@@ -22,7 +25,10 @@ The compiler is **fully pipelined**. Parsing, type checking, and code generation
 
 ## Reproducible builds
 
-Every build is **byte-for-byte reproducible**. The same source compiled again, with the same compiler, produces identical output every time, with nothing left to timestamps, memory addresses, or iteration order. Reproducible output makes a binary verifiable and makes a build cache dependable.
+Every build is **byte-for-byte reproducible**. The same source compiled again, with the same compiler, produces identical output every time, with nothing left to timestamps, memory addresses, or iteration order.
+
+> [!RATIONALE]
+> Reproducible output makes a binary verifiable and makes a build cache dependable.
 
 ## A hermetic compiler
 

@@ -71,7 +71,10 @@ let inc = |x: Sint32| -> Sint32 { return x + 1; };
 let r = apply(inc, 41);                // 42, with `apply` from above
 ```
 
-A leading `|`, in a position where an expression is expected, always begins an anonymous function and is never read as the bitwise-or operator. An `|` written between two operands keeps its ordinary meaning, so the two uses never collide.
+> [!NOTE]
+> A leading `|`, in a position where an expression is expected, always begins an
+> anonymous function and is never read as the bitwise-or operator. An `|` written
+> between two operands keeps its ordinary meaning, so the two uses never collide.
 
 > [!RATIONALE]
 > Anonymous functions do not capture the surrounding scope, so Biron has no
@@ -165,7 +168,10 @@ fn(p: P, k: Sint32, on: Bool) blend(extra: Sint32) -> Sint32 {
 (pt, mul, true).blend(1);    // 7*10 + 1
 ```
 
-The spread is purely a call-site form. A tuple *value* held in a variable is a single receiver and matches a single tuple-typed receiver `fn(t: (A, B)) foo()`, not the multi-argument form.
+> [!IMPORTANT]
+> The spread is purely a call-site form. A tuple *value* held in a variable is a
+> single receiver and matches a single tuple-typed receiver `fn(t: (A, B)) foo()`,
+> not the multi-argument form.
 
 > [!TIP]
 > The explode operator `~` produces the same spread from an existing aggregate.

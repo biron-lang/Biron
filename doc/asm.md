@@ -45,14 +45,20 @@ The arguments are matched to the input operands by position, so `x` is the first
 
 ## Operands
 
-Each element of the aggregate is one operand, described by a value from the `asm` module. These types are a convenience which structually matches the requirement for an `asm` type. There is nothing special about them and they are not a special "compiler builtin".
+Each element of the aggregate is one operand, described by a value from the `asm` module.
+
+> [!NOTE]
+> These types are a convenience which structurally matches the requirement for an `asm` type. There is nothing special about them and they are not a special "compiler builtin".
+
 | Type           | Used for           |
 |----------------|--------------------|
 | `asm::Reg`     | A register         |
 | `asm::Mem`     | A piece of memory  |
 | `asm::Imm`     | An immediate value |
 | `asm::Clobber` | Clobber            |
-When it comes to registers specifically, an implicit selector enumerator of the register name or `.Any` can be used, the latter of which leaves the register allocation up to the compiler. A register also requires a direction (`.In`, `.Out`, or `.Inout`)
+
+> [!NOTE]
+> A register uses an implicit selector of its name, or `.Any` to leave the allocation to the compiler, and it also takes a direction (`.In`, `.Out`, or `.Inout`).
 
 Each operand is referred to inside the template by its position. The first is `%0`, the second `%1`, and so on. An operand appears in the template only when the instruction uses it. For example, the `add` instruction uses two, while `syscall` uses none, because a system call is passed its arguments in fixed registers.
 
@@ -99,11 +105,21 @@ asm::Imm { 42 as Uint32 },
 
 ## Clobbers
 
-A clobber records one location the instruction destroys that is not an operand. Each is its own entry, a register name such as `"rcx"`, or `"memory"` for memory the instruction touches, or `"cc"` for the condition flags. Anything left undeclared may be miscompiled, so every destroyed register and flag is listed as a clobber of its own.
+A clobber records one location the instruction destroys that is not an operand. Each is its own entry, a register name such as `"rcx"`, or `"memory"` for memory the instruction touches, or `"cc"` for the condition flags.
+
+> [!CAUTION]
+> Anything left undeclared may be miscompiled, so every destroyed register and flag is listed as a clobber of its own.
+
+A block with an empty template and only a `"memory"` clobber is a compiler memory barrier. It emits no instruction, and it orders the surrounding loads and stores so that none are moved across it.
+
+```biron
+const barrier = asm("") { asm::Clobber { "memory" } };
+unsafe { barrier() };
+```
 
 ## Composition
 
-Because a block is a value of an ordinary type, it composes the way other values do. The operand list is built from constant expressions and shared constants, so it is possible to factor out and reuse a common sequence. An asm type is also a generic argument like any other, so one routine can be written over an unknown block and specialized for each one. This is the same templating already available for the rest of the language, applied to assembly for free.
+Because a block is a value of an ordinary type, it composes the way other values do. The operand list is built from constant expressions and shared constants, so it is possible to factor out and reuse a common sequence. An asm type is also a generic argument like any other, so one routine can be written over an unknown block and specialized for each one. This is the same templating the rest of the language already has.
 
 ## Type checking
 
@@ -113,7 +129,7 @@ An `.Any` register has no fixed name, so it is referenced only by a `%N` placeho
 
 ## Examples
 
-The examples above are small. Two larger ones on x86-64 show the operand model at a realistic scale, alongside the CPUID block already shown.
+The two examples below on x86-64 use more of the operand model, together with the CPUID block above.
 
 A 128 bit compare and exchange with `CMPXCHG16B`. The expected value is held in the rdx and rax pair and the desired value in the rcx and rbx pair, the address is in rsi, and the zero flag reports whether the exchange happened.
 

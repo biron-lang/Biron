@@ -53,4 +53,7 @@ let d = channels of px;                   // 4, taken from a value too
 let one: component of Rgba = 255;         // component is Uint8
 ```
 
-A field and a member property are distinct. A field holds data that differs per value, while a `const` or `type` member belongs to the struct itself and is never stored in an instance. Only the built-in properties and the members a struct declares are valid on the left of `of`.
+A field and a member property are distinct. A field holds data that differs per value, while a `const` or `type` member belongs to the struct itself and is never stored in an instance.
+
+> [!IMPORTANT]
+> Only the built-in properties and the members a struct declares are valid on the left of `of`.

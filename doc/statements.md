@@ -179,7 +179,8 @@ fn ret(acc: &Sint32, x: Sint32) -> Sint32 {
 }
 ```
 
-A `defer` body may not itself contain a nested `defer` or a `return`.
+> [!CAUTION]
+> A `defer` body may not itself contain a nested `defer` or a `return`.
 
 ## return and Never-Returning Functions
 
