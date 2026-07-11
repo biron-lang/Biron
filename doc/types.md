@@ -105,6 +105,8 @@ let f: fn(a: Sint32, b: Sint32) -> Sint32 = add;
 let r = f(3, 4);               // 7
 ```
 
+One further type has its own chapter. `asm("template")` is the type of an inline assembly block, an unusual case where the assembler text is part of the type. A value of it is an aggregate of operands, and calling that value runs the assembly. See [Inline Assembly](#asm).
+
 The composite constructors `struct`, `union`, and `enum` build aggregate types. See **Aggregates & Literals** for how to construct and use them, and **Optionals & Unions** and **References & Pointers** for `?T`, `@T`, `*T`, and `&T` in depth.
 
 ## Value and reference semantics
