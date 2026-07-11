@@ -108,7 +108,7 @@ asm::Imm { 42 as Uint32 },
 A clobber records one location the instruction destroys that is not an operand. Each is its own entry, a register name such as `"rcx"`, or `"memory"` for memory the instruction touches, or `"cc"` for the condition flags.
 
 > [!CAUTION]
-> Anything left undeclared may be miscompiled, so every destroyed register and flag is listed as a clobber of its own.
+> Anything left undeclared may be miscompiled, so every destroyed register and flag must be listed as a clobber.
 
 A block with an empty template and only a `"memory"` clobber is a compiler memory barrier. It emits no instruction, and it orders the surrounding loads and stores so that none are moved across it.
 
