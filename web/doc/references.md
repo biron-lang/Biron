@@ -39,7 +39,8 @@ bump(p);            // legal: p has storage, and is mutated in place
 // bump(10);        // error: a literal has no storage to bind
 ```
 
-Assigning to a reference assigns to its referent. It never rebinds the reference to point somewhere else.
+> [!IMPORTANT]
+> Assigning to a reference assigns to its referent. It never rebinds the reference to point somewhere else.
 
 ## Writing through a reference
 

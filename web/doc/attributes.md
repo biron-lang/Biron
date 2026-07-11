@@ -95,7 +95,12 @@ fn dec(a: Sint32) -> Sint32 { return a - 1; }
 
 ### Packed layout — `@(packed)`
 
-`@(packed)` on a struct type removes all inter-field padding, laying the fields out with byte alignment and no gaps. Because a field may then be misaligned, its address cannot be taken. Writing `&s.field`, or binding it to a `&T`, is an error. Only whole-value reads and assignments are allowed, and `&s` on the whole object is still fine.
+`@(packed)` on a struct type removes all inter-field padding, laying the fields out with byte alignment and no gaps.
+
+> [!CAUTION]
+> Because a field may then be misaligned, its address cannot be taken. Writing `&s.field`, or binding it to a `&T`, is an error.
+
+Only whole-value reads and assignments are allowed, and `&s` on the whole object is still fine.
 
 ```biron
 @(packed)

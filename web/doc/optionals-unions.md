@@ -39,7 +39,8 @@ fn opt_or(o: ?Sint32, d: Sint32) -> Sint32 {
 }
 ```
 
-Only a bare identifier condition narrows. A condition that is neither a `Bool` nor an optional is an error, so something that has no presence cannot be accidentally tested.
+> [!IMPORTANT]
+> Only a bare identifier condition narrows. A condition that is neither a `Bool` nor an optional is an error, so something that has no presence cannot be accidentally tested.
 
 ### Narrowing binds by reference
 
@@ -72,7 +73,8 @@ let i: Variant = 42;
 let f: Variant = 3.5 as Real32;
 ```
 
-The storage is sized and aligned to the largest variant, so a 16-byte `String` and a 4-byte `Real32` live in the same slot at different times.
+> [!NOTE]
+> The storage is sized and aligned to the largest variant, so a 16-byte `String` and a 4-byte `Real32` live in the same slot at different times.
 
 ### Testing and narrowing with `is`
 

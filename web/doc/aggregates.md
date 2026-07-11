@@ -26,7 +26,8 @@ let t: Tri = { .b = 2, 3 };   // .b sets b, then 3 fills c (the field after b)
 // t.a = 0, t.b = 2, t.c = 3
 ```
 
-Designating a field and then supplying a trailing positional past the last field overflows and is an error.
+> [!CAUTION]
+> Designating a field and then supplying a trailing positional past the last field overflows and is an error.
 
 ### Inferring the type, and the `{}` zero value
 
@@ -83,7 +84,10 @@ let f = [4]Sint32 { 10, .2 = 30, 40 };
 // f[0]=10, f[1]=0, f[2]=30, f[3]=40
 ```
 
-For `[?]T`, the length is one past the highest slot touched, whether by a designator or by the cursor. The slice type `[]T` has no literal because it has no fixed length.
+For `[?]T`, the length is one past the highest slot touched, whether by a designator or by the cursor.
+
+> [!NOTE]
+> The slice type `[]T` has no literal because it has no fixed length.
 
 ### Enumerated array literals
 

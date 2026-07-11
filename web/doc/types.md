@@ -210,7 +210,10 @@ An alias has no identity of its own, so a value typed through it is the underlyi
 
 A `type` gives its type a fresh identity, so a value fits a type `T` in only two situations. Either it is a **non-typed literal**, a bare number, `{ ... }`, or `( ... )`, which then takes the type `T`, or its type is **already `T`**. Anything else crosses with an explicit `as`.
 
-The one addition is structural typing for the three composites. For a `struct`, `union`, or `enum`, an anonymous one of the same structure counts as already being `T`, in either direction. It does not extend to arrays, tuples, or scalars, which hold their own identity like any distinct type. (This is also why the built-in `Length`, a distinct `Uint64`, and `Bool`, a distinct `Bool8`, are not accepted as their underlying without a cast.)
+The one addition is structural typing for the three composites. For a `struct`, `union`, or `enum`, an anonymous one of the same structure counts as already being `T`, in either direction. It does not extend to arrays, tuples, or scalars, which hold their own identity like any distinct type.
+
+> [!RATIONALE]
+> This is also why the built-in `Length`, a distinct `Uint64`, and `Bool`, a distinct `Bool8`, are not accepted as their underlying without a cast.
 
 ```biron
 type Foo    = struct { x: String }

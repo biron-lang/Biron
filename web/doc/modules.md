@@ -84,7 +84,9 @@ fn secret(x: Sint32) -> Sint32 { return x * 2; }
 @(export) fn scaled(x: Sint32) -> Sint32 { return triple(x) + add(x, x); }
 ```
 
-Referring to something that cannot be seen is an error, and the message reports which attribute the declaration needs.
+> [!CAUTION]
+> Referring to something that cannot be seen is an error, and the message
+> reports which attribute the declaration needs.
 
 ## Type identity across modules
 
@@ -164,4 +166,7 @@ fn sum3(first: Sint32, ...) -> Sint32 {
 }
 ```
 
-`copy` clones a cursor so the same arguments can be read twice through two independent walks. A `start` (or `copy`) must always be paired with an `end`.
+`copy` clones a cursor so the same arguments can be read twice through two independent walks.
+
+> [!IMPORTANT]
+> A `start` (or `copy`) must always be paired with an `end`.

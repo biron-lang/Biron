@@ -28,7 +28,8 @@ A Biron source file is a flat sequence of top-level declarations. There are five
 | `import`    | another module, made available under a namespace |
 | `foreign`   | external C symbols to link against |
 
-A mutable global variable is deliberately not among them.[^globals]
+> [!NOTE]
+> A mutable global variable is deliberately not among them.[^globals]
 
 Declarations are **order-independent**. The file is collected before it is checked, so a function may call another that is written later in the file, and two types may refer to each other freely. Nothing ever has to be forward-declared, and declarations need not be arranged top-down.
 
