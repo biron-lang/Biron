@@ -87,6 +87,8 @@ Because every side-effecting capability must be declared and then established th
 
 The payoff is control. An entire program can be sandboxed, introspected, or intercepted from a single place, the one `with` that establishes an effect. Swapping the handler makes every callee see the new behavior, with nothing else to change and nowhere for a hidden dependency to leak in.
 
+The same rule makes baremetal and freestanding operation the default rather than a bolted-on mode. It is not a separate feature, it is what hermeticity is. Once nothing is allowed to be ambient, the operating system cannot be ambient either, so it has to arrive as a capability rather than be assumed to be present. Most languages take the opposite starting point, a hosted world, then offer a diminished `no_std` or `-ffreestanding` mode as a kind of amputation. In Biron baremetal is the ground state. A hosted environment is something a program asks for through the `System` effect, which falls out of the rule rather than being designed in separately. This is described in [Freestanding Executables](#freestanding).
+
 ## No global mutable state
 
 Biron has no global variables. A mutable value visible to every function would be exactly the ambient, undeclared capability the effect system exists to rule out. It could be read or written from anywhere without being named in a signature, and hermeticity would be lost.
