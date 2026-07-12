@@ -178,6 +178,36 @@ let view: []Sint32 = xs[:];       // a slice over the used elements of xs
 
 Appending, length, and slicing are ordinary methods that the core library defines over these kinds, so one interface serves all three.
 
+## Zero-sized types
+
+A few types hold no storage. A value of one occupies zero bytes, so it adds nothing to the size of a struct, tuple, or array around it and it leaves the position of the neighboring fields unchanged.
+
+| Written | Meaning |
+| --- | --- |
+| `struct {}` | a struct with no fields |
+| `union {}` | a union with no variants |
+| `enum {}` | an enum with no members |
+| `[0]T` | an array of no elements |
+| `asm("...")` | an inline assembly block, with its own chapter |
+
+A composite built only from zero-sized parts is itself zero-sized, so a struct whose every field is empty holds no storage either. An empty `union {}` and an empty `enum {}` have no value of their own, so they matter mostly for generic code that stays uniform across every argument, where a zero-sized parameter is one more ordinary case rather than a special one.
+
+Apart from taking no space, a zero-sized value is an ordinary value. It is addressable, so `&` yields a pointer to it and a zero-sized field is addressable like any other. A zero-length array field is the usual way to point at the position that follows the earlier fields, since its address is that position and it adds no bytes of its own.
+
+```biron
+type Header = struct {
+	length: Sint32,
+	rest:   [0]Uint8,      // no storage, marks where the trailing bytes begin
+}
+
+let h = Header { .length = 5, .rest = [0]Uint8 {} };
+let start = &h.rest;         // a pointer to the position just past `length`
+```
+
+Because a zero-sized value occupies no byte, two distinct zero-sized values may share one address. An empty type composes with generics like any other, so a set defined as a map from a key to `struct {}` spends nothing on its values.
+
+The inline assembly type `asm("...")` is the one exception. It is zero-sized as well, yet unlike the others it has no address and must be a constant, so `&` on it and a pointer or reference to it are both rejected. See [Inline Assembly](#asm).
+
 ## Named types and aliases
 
 A `type` declaration mints a **new distinct type**. This holds for every kind of body, a `struct`, `union`, or `enum`, and equally a scalar, a tuple, an array, or a function type. The result has its own identity and never coerces to or from the type its body describes, so an explicit `as!` is the only crossing.

@@ -6,6 +6,8 @@ Inline assembly is offered as a statement in most languages. Biron takes a diffe
 
 `asm("template")` is a type. The template is the assembler text, and a value of the type is built by an ordinary aggregate initializer whose elements are the operands. The value is a constant, so it is bound with `const`, and it composes from other constants and passes through generics the way any constant does.
 
+The asm type is [zero-sized](#types), so a block placed as a field of a struct or an element of a tuple holds no storage and adds nothing to the size around it. Two textually identical templates are the same type, so a block used as a struct field matches a block written at another spot with the same text. Unlike the other zero-sized types it has no address and must be a constant, so `&` on a block, and a pointer or reference to the asm type, are rejected. A block exists only to be built and called.
+
 As an example, an integer add of two registers is written as three operands. The block is an inline literal, and its type is inferred the way any `T { ... }` literal is.
 
 ```biron
