@@ -6,16 +6,16 @@ Biron is built from a few principles that are held everywhere, without exception
 
 The word expressive is used in more than one way, and the sense meant here is the semantic one, the size of the vocabulary of behaviors the language can describe. It does not mean concise or pleasant syntax, and it is a separate concern from the absence of expressivity holes, which is a goal of its own below.
 
-There is a precise test for when a construct adds power of this kind. It adds none if it can be introduced by a local, macro-like translation, one that rewrites each occurrence in place and leaves the rest of the program structurally untouched. In the lambda calculus a `let` binding adds no power, because it expands to an application of a lambda that already exists, so `let` is only sugar, a change of notation with no change in what the program means. A construct genuinely adds power only when it cannot be introduced this way, when adding it forces the surrounding program to be restructured rather than rewritten in place.
+There is a precise test for when a construct adds power of this kind. It adds none if it can be introduced by a local, macro-like translation, one that rewrites each occurrence in place and leaves the rest of the program structurally untouched. In the lambda calculus a `let` binding adds no power, because it expands to an application of a lambda that already exists, so `let` is only sugar, a change of notation with no change in what the program means. A construct adds power only when it cannot be introduced this way, when adding it forces the surrounding program to be restructured rather than rewritten in place.
 
 Biron aims for power in this sense, enough that the behaviors a programmer needs are expressible within the language rather than built into it as privileged features. Control, state, and whatever effects are central to a given domain should be things the language can describe, not fixed constructs granted by the compiler. An effect is an ordinary declared type that a signature lists, so the vocabulary is open rather than a fixed set of keywords.
 
 ```biron
-type Log = struct {}                                  // an effect is a declared type
-fn(l: Log) note(n: Sint32) <Log> -> Sint32 { return n; }  // a signature carries it
+type Log = struct {}                              // an effect is a declared type
+fn note(n: Sint32) <Log> -> Sint32 { return n; }  // a signature lists it in <...>
 ```
 
-It is for this reason that algebraic effects have to exist, because what an effect captures, the passing of an operation to a handler defined elsewhere and the resumption of the code that performed it, is exactly the kind of behavior that no local rewrite can add. See [Effects & Hermeticity](#effects). The goal is not that programs can be written concisely. It is that the semantic vocabulary is large enough for the common reality on its own, and user-extensible for everything beyond it, so a user adds the power a problem calls for rather than waiting for the language to provide it.
+It is for this reason that algebraic effects have to exist, because what an effect captures, the passing of an operation to a handler defined elsewhere and the resumption of the code that performed it, is the kind of behavior that no local rewrite can add. See [Effects & Hermeticity](#effects). The goal is not that programs can be written concisely. It is that the semantic vocabulary is large enough for the common reality on its own, and user-extensible for everything beyond it, so a user adds the power a problem calls for rather than waiting for the language to provide it.
 
 ## Generality, not special cases
 
@@ -82,7 +82,7 @@ A rule that holds in most contexts but not all cannot be relied on, and the whol
 
 A hole is an idea that can be expressed almost everywhere and then, in one particular place, cannot, because something there is special. The expressiveness holds up to that one place and stops there.
 
-Holes of this kind are easy to find in other languages. In C++ a pointer can be formed to nearly any function, a member function or an overloaded operator included, but not to a constructor or a destructor, since those have no name to refer to, and the `this` pointer can be read but not assigned though any other pointer can.
+Holes of this kind are easy to find in other languages. In C++ a pointer can be formed to nearly any function, a member function or an overloaded operator included, but not to a constructor or a destructor, since those have no name to refer to, and the `this` pointer can be read but not assigned though any other pointer can. C++ stopped pretending to be consistent decades ago. Forty years of features have left it with more special cases than a tax code, each rule shadowed by the one place it politely stops applying.
 
 ```cpp
 struct Widget {
@@ -94,10 +94,10 @@ auto p = &Widget::draw;    // fine
 auto c = &Widget::Widget;  // error: cannot take the address of a constructor
 ```
 
-In Odin and Zig the compile-time type and constant parameters are part of the ordinary argument list, which reads well until a generic must be instantiated without being called, to force its code to be generated, or must have its address taken, neither of which the argument list allows. In Go a free function may take type parameters but a method may not, so genericity that holds for functions is absent for methods.
+In Odin and Zig the compile-time type and constant parameters are part of the ordinary argument list, which reads well until a generic must be instantiated without being called, to force its code to be generated, or must have its address taken, neither of which the argument list allows. Zig is the worst offender of the lot, with more holes than a spaghetti strainer at a shotgun convention. In Go a free function may take type parameters but a method may not, so genericity that holds for functions is absent for methods. Go fails from the other direction. Its minimalism is the kind that saves a keyword and spends your afternoon, sooner making you copy a function out four times than let a method take a type parameter of its own.
 
 ```go
-func Map[T, U any](xs []T, f func(T) U) []U { /* fine */ }
+func Map[T, U any](xs []T, f func(T) U) []U { return nil }   // fine
 
 type Set[T any] struct{}
 func (s Set[T]) Map[U any](f func(T) U) Set[U] { /* ... */ }
@@ -111,18 +111,18 @@ let z: struct{} = {};   // a zero-sized value
 let p = &z;             // still has an address, like any other value
 ```
 
-The same reasoning governs what Biron leaves out. A range written directly in a loop is a convenience many languages offer, but a range that exists only in that one position is itself a hole, because one with no name, no way to be stored, and no type is a value the rest of the language cannot describe. Biron declines the loop-only form and enumerates collections through generators instead, where the value being iterated is an ordinary one. The reasoning also decides what Biron includes. Component-wise arithmetic on arrays is meant to be present not because array programming is a desirable feature on its own, but because leaving it out would be a hole, since a number can be added to a number and an array is only more numbers.
+The same reasoning governs what Biron leaves out. A range written directly in a loop is a convenience many languages offer, but a range that exists only in that one position is itself a hole, because one with no name, no way to be stored, and no type is a value the rest of the language cannot describe. Biron declines the loop-only form and enumerates collections through generators instead, where the value being iterated is an ordinary one. The reasoning also decides what Biron includes. Component-wise arithmetic on arrays belongs in the language not because array programming is a desirable feature on its own, but because leaving it out would be a hole, since a number can be added to a number and an array is only more numbers.
 
 A hole is not only a matter of syntax. It appears in semantics as well, where a behavior expressible in most situations becomes inexpressible in one, and that is the concern of the expressive-power goal at the start of this chapter.
 
 ## References are ordinary values
 
-A language that treats `&` and `*` as explicit still tends to run a second mode where they are not. Field access, indexing, an assignment target, and a method receiver each insert a borrow or a dereference that was never written. In Rust a field read through a reference is spelled as though the reference were the value, and a method call adds a borrow and however many dereferences resolution needs.
+A language that treats `&` and `*` as explicit still tends to run a second mode where they are not. Field access, indexing, an assignment target, and a method receiver each insert a borrow or a dereference that was never written. In Rust a field read through a reference is spelled as though the reference were the value, and a method call adds a borrow and however many dereferences resolution needs. Rust talks the loudest about explicit references and quietly inserts the most, a dereference for every dot you write.
 
 ```rust
 let r: &Foo = &foo;
 let x = r.field;   // read as (*r).field
-foo.method();      // an implicit borrow plus autoderef
+foo.method();      // an implicit borrow: Foo::method(&foo)
 ```
 
 Go inserts the address-of and dereference operators around a method receiver on its own.
@@ -135,7 +135,7 @@ var pt Point
 pt.bump()   // rewritten as (&pt).bump()
 ```
 
-C++, Swift, Zig, and Odin are each inconsistent in their own way, some with implicit reference behavior that cannot be written anywhere else in the language, some arguing for explicit references and then inserting implicit ones for convenience. The justification usually given for explicit references is that implicit behavior surprises a reader, yet these are the positions where it happens.
+C++, Swift, Zig, and Odin each do a version of the same. Swift dresses a computed property in the same `.x` as a stored one, so a place might be memory or might be a function call and the surface never says which. Odin dereferences a pointer for you at every `.`, the same implicit step under a different name. The justification usually given for explicit references is that implicit behavior surprises a reader, yet these are the positions where it happens.
 
 Biron removes the second mode by making a reference an ordinary type. A `&T` is a real value, and it is transparent, so it reads as a `T` wherever one is wanted with no written `*`. A place such as `obj.field` or `a[i]` is then an ordinary expression of type `&T`, a first-class value that can be stored and passed like any other rather than a position with a hidden rewrite.
 
@@ -146,7 +146,7 @@ let p = P { 5 };
 let x = p.field;   // p.field has type &Sint32, read as Sint32 with no written *
 ```
 
-One rule holds everywhere, with no second mode to switch into.
+One rule then holds in every position, so there is no second mode for the language to switch into and nothing implicit left for a reader to reconstruct.
 
 ## The common reality, not the common case
 
