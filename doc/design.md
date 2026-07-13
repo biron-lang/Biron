@@ -50,6 +50,10 @@ The same reasoning governs what Biron leaves out. A range written directly in a 
 
 It also decides what Biron includes. Component-wise arithmetic on arrays is present not because array programming is a desirable feature on its own, but because leaving it out would be a hole. A number can be added to a number, and an array is only more numbers, so an array of numbers must be addable too.
 
+References are a subtler case. A language that advertises explicit references, where `&` forms one and `*` removes it, usually runs a second mode beneath that claim. Field access, indexing, an assignment target, and a method receiver each insert a borrow or a dereference that was never written. In Rust, field access on a reference `r` of type `&Foo` is written `r.field`, where the explicit form is `(*r).field`, and a method call adds an implicit borrow and as many dereferences as resolution needs. C++, Go, Swift, Zig, and Odin each have a version of the same split. The reason usually given for making references explicit is that implicit reference behavior surprises a reader, and these positions are exactly where that behavior happens.
+
+Biron removes the second mode by making a reference an ordinary type. A `&T` is a real value, and it is transparent, so it reads as a `T` wherever a `T` is wanted with no written `*`. A place such as `obj.field` or `a[i]` is then an ordinary expression whose type is `&T`, a first-class value that can be stored and passed like any other, rather than a syntactic position where a rewrite happens out of sight. One rule holds in every position, and the reference stays visible in the type instead of being a second semantic system the language switches into.
+
 A hole is not only a matter of syntax. It appears in semantics as well, where a behavior expressible in most situations becomes inexpressible in one, and that is the concern of the expressive-power goal at the start of this chapter.
 
 ## The common reality, not the common case
