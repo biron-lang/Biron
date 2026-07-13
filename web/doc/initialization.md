@@ -32,7 +32,7 @@ A struct, an array, and a tuple are structural aggregates, so the braces may ins
 ```biron
 type Point = struct { x: Sint32, y: Sint32 };
 
-let p = Point { .x = 3, .y = 4 };   // a field list
+let p = Point { x = 3, y = 4 };   // a field list
 let q = Point { 3, 4 };             // positional
 let z = [4]Sint32 { 7, 8 };         // the remaining two elements are zeroed
 ```

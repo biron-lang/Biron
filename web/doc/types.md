@@ -94,7 +94,7 @@ A slice `[]T` is a fat pointer of a data pointer and a length, like `String`. A 
 ```biron
 fn sum4(a: [4]Sint32) -> Sint32 { return a[0] + a[1] + a[2] + a[3]; }
 
-let colors = [enum; Color]Sint32 { .Red = 1, .Green = 2, .Blue = 3 };
+let colors = [enum; Color]Sint32 { Red = 1, Green = 2, Blue = 3 };
 ```
 
 A function type describes a function's signature, and a function value is assigned to it directly.
@@ -200,7 +200,7 @@ type Header = struct {
 	rest:   [0]Uint8,      // no storage, marks where the trailing bytes begin
 }
 
-let h = Header { .length = 5, .rest = [0]Uint8 {} };
+let h = Header { length = 5, rest = [0]Uint8 {} };
 let start = &h.rest;         // a pointer to the position just past `length`
 ```
 
@@ -280,7 +280,7 @@ type B = struct {
 	y: String,
 }
 
-let b = B { .x = "Hi", .y = "World" };
+let b = B { x = "Hi", y = "World" };
 let vx: &String = b.x;                   // the embedded A.x, addressable
 ```
 
@@ -292,7 +292,7 @@ type C = struct {
 	y: String,
 }
 
-let c = C { .x = "Hi", .y = "World" };
+let c = C { x = "Hi", y = "World" };
 let p: &String = c.a.x;                  // the same field as c.x
 ```
 
@@ -314,7 +314,7 @@ type Base = struct { tag: Sint32 }
 type Mid  = struct { using Base, m: Sint32 }
 type Leaf = struct { using Mid,  n: Sint32 }
 
-let leaf = Leaf { .tag = 1, .m = 2, .n = 3 };
+let leaf = Leaf { tag = 1, m = 2, n = 3 };
 let base: &Base = leaf;      // through Mid, then Base
 ```
 

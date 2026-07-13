@@ -178,8 +178,8 @@ fn[T: Type] via_runtime(x: T) <T> -> Sint32 {
 }
 
 fn caller() -> Sint32 {
-	with Effect = Effect { .x = 42 };
-	return via_runtime(Effect { .x = 7 });   // reads the effect -> 42
+	with Effect = Effect { x = 42 };
+	return via_runtime(Effect { x = 7 });   // reads the effect -> 42
 }
 ```
 

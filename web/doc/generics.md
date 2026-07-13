@@ -80,14 +80,14 @@ A value generic is not limited to integers. Its argument can be any constant of 
 
 ```biron
 type Vec = struct { x: Sint32, y: Sint32 }
-const ORIGIN = Vec { .x = 3, .y = 4 };
+const ORIGIN = Vec { x = 3, y = 4 };
 
 fn[V: Vec] vsum() -> Sint32 {
 	return V.x + V.y;
 }
 
 vsum::[ORIGIN]()                 // reads 3 + 4
-vsum::[Vec{ .x = 10, .y = 1 }]() // reads 10 + 1
+vsum::[Vec{ x = 10, y = 1 }]() // reads 10 + 1
 ```
 
 Floating-point and other scalar constants work the same way, so `pairsum::[Real32, Uint32, 10.0, 10]()` binds two types and two values at once.
@@ -111,13 +111,13 @@ fn take_pair(p: Pair::[Sint32, Bool]) -> Sint32 { return 3; }
 An instantiation can be constructed like any other aggregate, by following it with a literal.
 
 ```biron
-let b = Box::[Sint32] { .value = 42 };
+let b = Box::[Sint32] { value = 42 };
 ```
 
 Types imported from a module are instantiated the same way, qualifying the name first.
 
 ```biron
-let r = mathmod::Rational::[Real32] { .num = 22.0, .den = 7.0 };
+let r = mathmod::Rational::[Real32] { num = 22.0, den = 7.0 };
 ```
 
 ## Instantiation identity

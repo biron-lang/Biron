@@ -2,6 +2,7 @@
 
 const CHAPTERS = [
   { slug: 'overview',        title: 'Overview' },
+  { slug: 'design',          title: 'Design Goals' },
   { slug: 'comments',        title: 'Comments' },
   { slug: 'types',           title: 'Types' },
   { slug: 'expressions',     title: 'Expressions' },
