@@ -4,16 +4,16 @@ Aggregates are the compound values of Biron, namely structs, arrays, tuples, and
 
 ## Struct literals
 
-A struct value is written `Name { .field = value, ... }`. Initializers may be **named** (`.field = value`, in any order) or **positional** (a bare `value`).
+A struct value is written `Name { field = value, ... }`. Initializers may be **designated** (`field = value`, in any order) or **positional** (a bare `value`). A designator carries no leading dot, so `.Member` stays reserved for the implicit enum selector.
 
 ```biron
 type Point = struct { x: Sint32, y: Sint32 }
 
-let a = Point { .x = 3, .y = 4 };   // named
+let a = Point { x = 3, y = 4 };   // named
 let b = Point { 10, 20 };           // positional: x = 10, y = 20
 ```
 
-Any field left out is zeroed, so `Point { .x = 5 }` gives a point with `y = 0`.
+Any field left out is zeroed, so `Point { x = 5 }` gives a point with `y = 0`.
 
 ### The C99 cursor rule
 
@@ -22,7 +22,7 @@ Named and positional initializers may be mixed. A positional initializer fills t
 ```biron
 type Tri = struct { a: Sint32, b: Sint32, c: Sint32 }
 
-let t: Tri = { .b = 2, 3 };   // .b sets b, then 3 fills c (the field after b)
+let t: Tri = { b = 2, 3 };   // .b sets b, then 3 fills c (the field after b)
 // t.a = 0, t.b = 2, t.c = 3
 ```
 
@@ -36,7 +36,7 @@ The type name may be omitted whenever the aggregate's type is fixed by context, 
 ```biron
 fn sum(p: Point) -> Sint32 { return p.x + p.y; }
 
-let p: Point = { .x = 3, .y = 4 };        // annotation
+let p: Point = { x = 3, y = 4 };        // annotation
 let a: [2]Point = { { 5, 0 }, { 0, 6 } }; // outer and inner both inferred
 let n = sum({ 4, 5 });                    // call argument
 ```
@@ -62,25 +62,25 @@ let v = struct { x: Bool } { true };
 Because the structure is what matters, an anonymous struct value is accepted anywhere a named type with the same structure is expected.
 
 ```biron
-let b: struct { x: Sint32, y: Sint32 } = { .x = 10, .y = 20 };
+let b: struct { x: Sint32, y: Sint32 } = { x = 10, y = 20 };
 let s = sum(b);   // accepted where a Point is wanted
 ```
 
 ## Arrays
 
-An array literal is `[N]T { ... }` for an explicit length, or `[?]T { ... }` to infer the length from the highest initialized slot. Elements are positional or designated by a numeric index `.i = value`. Both mix under the same cursor rule as struct fields.
+An array literal is `[N]T { ... }` for an explicit length, or `[?]T { ... }` to infer the length from the highest initialized slot. Elements are positional or designated by a numeric index `i = value`. Both mix under the same cursor rule as struct fields.
 
 ```biron
 let a = [3]Sint32 { 10, 20, 30 };        // positional
 let b = [?]Sint32 { 1, 2, 3, 4 };        // length inferred as 4
-let c = [2]Sint32 { .1 = 10, .0 = 20 };  // designated, any order
+let c = [2]Sint32 { 1 = 10, 0 = 20 };  // designated, any order
 let d = [4]Sint32 { 7, 8 };              // rest zero-filled: d[2] = d[3] = 0
 ```
 
-The cursor persists across designators, so a positional after `.2` fills slot 3.
+The cursor persists across designators, so a positional after `2 = ...` fills slot 3.
 
 ```biron
-let f = [4]Sint32 { 10, .2 = 30, 40 };
+let f = [4]Sint32 { 10, 2 = 30, 40 };
 // f[0]=10, f[1]=0, f[2]=30, f[3]=40
 ```
 
@@ -96,7 +96,7 @@ An enumerated array `[enum; E]T` is indexed by the enumerators of an enum. Its l
 ```biron
 type Foo = enum { A, B, C }
 
-let x = [enum; Foo]String { .A = "A", .C = "C", .B = "B" };
+let x = [enum; Foo]String { A = "A", C = "C", B = "B" };
 let s = x[.A];   // "A"
 ```
 
@@ -145,7 +145,7 @@ type Pair = struct { a: Color, b: Status }
 
 let c: Color = .Green;          // annotated binding
 d = .Blue;                      // assignment (d is a Color)
-let p = Pair { .a = .Blue, .b = .Ok };   // per-field type
+let p = Pair { a = .Blue, b = .Ok };   // per-field type
 let eq = c == .Green;           // inferred from the peer operand
 ```
 

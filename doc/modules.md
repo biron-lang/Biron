@@ -42,7 +42,7 @@ The `module::member` form works for every kind of exported entity, namely functi
 import "mathmod" as m
 
 // A generic type from another module, instantiated here.
-let r = m::Rational::[Real32] { .num = 22.0, .den = 7.0 };
+let r = m::Rational::[Real32] { num = 22.0, den = 7.0 };
 
 // A generic function, its type argument inferred from the value.
 let a = m::abs(0 - 9);            // 9
@@ -113,7 +113,7 @@ Because an alias is transparent, a value typed through it is accepted anywhere t
 A `foreign` block declares external C symbols. Each entry is a function signature, and the block is accessed through its name as a namespace (`libc::printf`). A foreign block **requires** a `@(link)` attribute specifying the library to bind.
 
 ```biron
-@(link("linktime", "c"))
+@(link("static", "c"))
 foreign libc {
 	fn printf(fmt: String, ...) -> Sint32,
 	fn abs(x: Sint32) -> Sint32,
@@ -130,12 +130,12 @@ The block name (`libc`) is only the `libc::member` namespace. The library to bin
 
 A foreign block obeys the same visibility attributes as any other declaration, with one limit. `@(module)` on the block shares its `libc::member` functions with the sibling files of the module, and each such file uses them as the external symbols they are. `@(export)` on a foreign block is rejected, since a foreign symbol is external already and widening it past the module would mean nothing.
 
-### Link time vs runtime
+### Static vs dynamic
 
-The first argument of `@(link)` chooses *when* symbols are resolved.
+The first argument of `@(link)` chooses *how* symbols are resolved.
 
-- `@(link("linktime", "c"))` binds the library at build time.
-- `@(link("runtime", "c"))` resolves symbols dynamically at program startup, so each `libc::fn` call goes through a pointer filled in at launch.
+- `@(link("static", "c"))` links the library's static archive at build time, as a `-l:libc.a` flag.
+- `@(link("dynamic", "c"))` resolves symbols at program startup, so each `libc::fn` call goes through a pointer filled in at launch.
 
 The call syntax is identical either way. Only the linking strategy differs.
 

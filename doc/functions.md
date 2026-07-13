@@ -121,7 +121,7 @@ type P = struct { x: Sint32, y: Sint32 }
 
 fn(p: P) sum() -> Sint32 { return p.x + p.y; }
 
-let pt = P { .x = 3, .y = 4 };
+let pt = P { x = 3, y = 4 };
 pt.sum();                                           // 7
 ```
 
@@ -186,8 +186,8 @@ An associated function is written `fn T::name(args)`, where `T` denotes a type. 
 ```biron
 type Vec2 = struct { x: Sint32, y: Sint32 }
 
-fn Vec2::zero() -> Vec2 { return Vec2 { .x = 0, .y = 0 }; }
-fn Vec2::make(a: Sint32, b: Sint32) -> Vec2 { return Vec2 { .x = a, .y = b }; }
+fn Vec2::zero() -> Vec2 { return Vec2 { x = 0, y = 0 }; }
+fn Vec2::make(a: Sint32, b: Sint32) -> Vec2 { return Vec2 { x = a, y = b }; }
 
 // One associated function may call another by the same spelling.
 fn Vec2::diagonal(n: Sint32) -> Vec2 { return Vec2::make(n, n); }

@@ -53,7 +53,7 @@ fn set_a(p: &Pair, v: Sint32) { p.a = v; }  // interior field write
 
 fn(self: &Sint32) put(v: Sint32) { self = v; }  // reference receiver
 
-let b = Pair { .a = 1, .b = 2 };
+let b = Pair { a = 1, b = 2 };
 set_a(b, 99);       // b.a is now 99
 
 let n: Sint32 = 1;
@@ -69,7 +69,7 @@ A pointer `*T` is an explicit pointer. An address is taken with `&` and derefere
 ```biron
 fn set_ptr(p: *Sint32) { *p = 99; }   // explicit deref to write
 
-let s = Pair { .a = 1, .b = 2 };
+let s = Pair { a = 1, b = 2 };
 set_ptr(&s.b);      // s.b is now 99
 
 let t = (5, 6);

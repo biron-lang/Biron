@@ -49,7 +49,7 @@ A `const` can hold any value the folder can build, not just scalars. It can hold
 
 ```biron
 type Point = struct { x: Sint32, y: Sint32 }
-const ORIGIN = Point { .x = 3, .y = 4 };
+const ORIGIN = Point { x = 3, y = 4 };
 
 type Color = enum { Red, Green = 5, Blue }
 const FAV:  Color  = Color.Green;

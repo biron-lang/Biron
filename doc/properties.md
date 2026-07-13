@@ -47,7 +47,7 @@ type Rgba = struct {
 }
 
 let c = channels of Rgba;                 // 4, a constant
-let px = Rgba { .r = 255, .g = 0, .b = 0, .a = 255 };
+let px = Rgba { r = 255, g = 0, b = 0, a = 255 };
 let d = channels of px;                   // 4, taken from a value too
 
 let one: component of Rgba = 255;         // component is Uint8
