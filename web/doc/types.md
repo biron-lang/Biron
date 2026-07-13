@@ -240,7 +240,7 @@ An alias has no identity of its own, so a value typed through it is the underlyi
 
 A `type` gives its type a fresh identity, so a value fits a type `T` in only two situations. Either it is a **non-typed literal**, a bare number, `{ ... }`, or `( ... )`, which then takes the type `T`, or its type is **already `T`**. Anything else crosses with an explicit `as!`.
 
-The one addition is structural typing for the three composites. For a `struct`, `union`, or `enum`, an anonymous one of the same structure counts as already being `T`, in either direction. It does not extend to arrays, tuples, or scalars, which hold their own identity like any distinct type.
+The one addition is structural typing for the four composites. For a `struct`, `union`, `enum`, or `tuple`, an anonymous one of the same structure counts as already being `T`, in either direction. It does not extend to arrays or scalars, which hold their own identity like any distinct type.
 
 > [!RATIONALE]
 > This is also why the built-in `Length`, a distinct `Uint64`, and `Bool`, a distinct `Bool8`, are not accepted as their underlying without a cast.
@@ -248,11 +248,13 @@ The one addition is structural typing for the three composites. For a `struct`, 
 ```biron
 type Foo    = struct { x: String }
 type Bar    = struct { x: String }
+type Pair   = tuple { Sint32, Sint32 }
 type Meters = Sint32
 
 let a: Foo    = { "hi" };                       // a literal takes the type
 let b: Foo    = struct { x: String } { "hi" };  // an anonymous struct is a Foo
 let c: Foo    = Bar { "hi" };                   // error, a different nominal type
+let p: Pair   = (1, 2);                         // an anonymous tuple is a Pair
 
 let m: Meters = 40;                             // a literal takes the type
 let n: Sint32 = 10;
