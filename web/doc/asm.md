@@ -1,79 +1,83 @@
 # Inline Assembly
 
-Inline assembly is offered as a statement in most languages. Biron offers it as a type instead, and a few unusual properties follow from that choice. Inputs, outputs, and clobbers of a block are supplied as an aggregate initializer for any variable declared of the asm type. Blocks are built from constant expressions and pass through generics as any constant value does, giving inline assembly the same templating the rest of the language already offers, in a cohesive and familiar syntax. Type checking over the operands becomes possible and rules out common mistakes, and the whole construct looks and behaves consistently in both its syntax and its semantics.
-
-## The assembly type
-
-`asm("template")` is a type whose template is the assembler text, and a value of the type is built by an ordinary aggregate initializer whose elements are the operands. Values of the type are constants, bound with `const`, and they compose from other constants and pass through generics as any constant does.
-
-Because the asm type is [zero-sized](#types), a block placed as a field of a struct or an element of a tuple has no storage and adds nothing to the size around it. Two textually identical templates are the same type, and a block used as a struct field matches a block written at another spot with the same text. Unlike the other zero-sized types it has no address and must be a constant, and `&` on a block, together with a pointer or reference to the asm type, are rejected. Blocks exist only to be built and called.
-
-As an example, an integer add of two registers is written as three operands. Here the block is an inline literal, and its type is inferred the way any `T { ... }` literal is.
+Inline assembly is a type, not a statement. `asm("template")` names the type, the operands are an ordinary aggregate initializer, and calling the value runs the assembly.
 
 ```biron
 const add = asm("add %1, %0") {
-	asm::RegRW { .ANY },      // operand 0, read and write
+	asm::RegRW { .ANY },      // operand 0, read then written
 	asm::RegRD { .ANY },      // operand 1, read
 	asm::Clobber { "cc" },
 };
+
+let sum = add(3 as! Sint32, 4 as! Sint32);   // 7
 ```
 
-Since it is a type like any other, it can also be written as an explicit type on the named binding, or through a named type too.
+Assembly blocks are constants. They compose from other constants and pass through generics like any other constant value.
+
+## The type
+
+The template is the assembler text. Two blocks whose templates are spelled identically have the same type.
+
+Assembly blocks are zero-sized. A block adds nothing to a struct or tuple containing it.
+
+Assembly blocks are not addressable, unlike every other zero-sized type. `&block`, `*asm(...)`, and `&asm(...)` are rejected. A block is a compile-time operand description with no memory image.
+
+Every value of an assembly type is constant, so bind one with `const`. The type may be inferred from the literal, annotated on the binding, or named first.
 
 ```biron
 const add2: asm("add %1, %0") = {
 	asm::RegRW { .ANY },
 	asm::RegRD { .ANY },
-	asm::Clobber { "cc" }
 };
 
 type Add = asm("add %1, %0");
 const add3 = Add {
 	asm::RegRW { .ANY },
 	asm::RegRD { .ANY },
-	asm::Clobber { "cc" }
 };
 ```
 
-## Running a block
+## Calling
 
-Calling a value of the asm type executes it. Building the value is safe, because it is only constant data, and a call is the unsafe part, permitted only inside an `unsafe` block. Calling returns the block's outputs.
+Arguments correspond to the reading operands in declaration order. The result is the writing operands in declaration order. One write returns a value directly and several return a tuple.
 
-```biron
-let sum = unsafe { add(x, y) };
-```
-
-Arguments are matched to the input operands by position, making `x` the first input and `y` the second. One output is returned as a plain value, and several as a tuple read with `.0` and `.1`.
+Memory operands take an argument but never appear in the result.
 
 ## Operands
 
-Each element of the aggregate is one operand, described by a value from the `asm` module. Direction is encoded in the operand type. `RD` reads an input, `WR` writes an output, and `RW` reads and then writes an in out. Register and memory operands come in all three directions, an immediate is always a read, and a clobber has no direction.
+Each element of the initializer is one operand. The type selects the kind and the direction together. `RD` reads, `WR` writes, `RW` does both.
 
-> [!NOTE]
-> These types are a convenience which structurally matches the requirement for an `asm` type. There is nothing special about them and they are not a special "compiler builtin".
-
-| Type | Direction | Used for |
-|------|-----------|----------|
-| `asm::RegRD` | read | a register input |
-| `asm::RegWR` | write | a register output |
-| `asm::RegRW` | read and write | a register in out |
+| Type | Direction | Describes |
+|------|-----------|-----------|
+| `asm::RegRD` | read | a register the instruction reads |
+| `asm::RegWR` | write | a register the instruction writes |
+| `asm::RegRW` | read and write | one register read then written |
 | `asm::MemRD` | read | memory read in place |
 | `asm::MemWR` | write | memory written in place |
-| `asm::MemRW` | read and write | memory read and written |
-| `asm::Imm` | read | an immediate input |
-| `asm::Clobber` | | a destroyed location |
+| `asm::MemRW` | read and write | memory read and written in place |
+| `asm::Imm` | read | an immediate baked into the instruction |
+| `asm::Clobber` | | a location the instruction destroys |
 
-Register operands are given a `Reg` name, `.ANY` to leave the choice to the compiler, or a specific name such as `.RAX` to pin it. Register writes also state their output type, described below.
+> [!NOTE]
+> These types are defined in the `asm` module rather than by the compiler. Only their shape matters, and you can write equivalents yourself.
 
-Each operand is referred to inside the template by its position. Positions are `%0` for the first, `%1` for the second, and so on. Operands appear in the template only when the instruction uses them. For example, the `add` instruction uses two, while `syscall` uses none, because a system call is passed its arguments in fixed registers.
+## Registers
 
-## Typing an output
+The `reg` field names the register. `.ANY` lets the compiler choose. A specific name such as `.RAX` pins the operand to that register.
 
-Registers can be wider than the value in them. One 128 bit vector register may contain a single 32 bit float, four packed 32 bit floats, or a 128 bit integer mask, and the instruction alone decides which. Inputs read their type from the value passed at the call, and their class and width are already known. Outputs have no value to read a type from, and a register write describes its type directly, by an element and an extent.
+Only the architectural name is given. The access width follows from the value, so a `Uint32` bound to `.RAX` assembles as `eax`.
 
-Together, `element` gives the type of one lane and `extent` gives the number of lanes. They denote an ordinary Biron type, the scalar element when the extent is one, and the array `[extent]element` when the extent is more than one. Values out of the register are then described in exactly the terms the rest of the language uses.
+Two operands cannot pin the same register. Use a single `RegRW` instead.
 
-Elements are written with a letter for the class and a number for the bit width.
+## Write types
+
+A write states its result type as an element and an extent. An extent of 1 gives the scalar element. Anything larger gives `[extent]element`.
+
+```biron
+asm::RegWR { .ANY, .F32, 4 }    // [4]Real32
+asm::RegWR { .ANY, .U128, 1 }   // Uint128
+asm::RegWR { .ANY, .F64, 1 }    // Real64
+```
 
 | Element | Lane |
 |---------|------|
@@ -81,62 +85,69 @@ Elements are written with a letter for the class and a number for the bit width.
 | `.U8` `.U16` `.U32` `.U64` `.U128` | unsigned integer |
 | `.F16` `.F32` `.F64` | float |
 
-These correspond to the built in `Sint32`, `Uint32`, `Real32`, and the rest. Letters are used because an enumerator cannot share a name with a built in type.
+These name the built-in `Sint32`, `Uint32`, `Real32`, and the rest. An enumerator cannot share a name with a built-in type, hence the short spelling.
+
+`.Auto` on a write is an error. A pure write provides no input to infer a type from.
+
+Reads take no element. Their type comes from the argument.
+
+The element and extent describe a value, not a register file. The backend picks the register class for the target. A `[4]Real32` write occupies an xmm on x86-64, and another architecture is free to answer differently.
+
+## Read-write operands
+
+`RegRW` with `element = .Auto` returns the input type. This is the default and covers read-modify-write.
 
 ```biron
-asm::RegWR { .ANY, .F32, 4 }   // the output is a [4]Real32
-asm::RegWR { .ANY, .U128, 1 }  // the output is a Uint128
-asm::RegWR { .ANY, .F64, 1 }   // the output is a Real64
+const inc = asm("add $1, %0") { asm::RegRW { .ANY } };
+
+let n = inc(41 as! Sint32);   // Sint32 in, Sint32 out
 ```
 
-Element and extent describe the value, and the compiler chooses which register contains it on the target being built, making a `[4]Real32` output describe the same value everywhere, while the choice of a vector register on one architecture or a floating point register on another is made below the language. Immediates and memory operands describe no element, an immediate reading its type from the constant given and a memory operand from the pointer passed at the call.
-
-> [!NOTE]
-> Every register write must state a real element. Writes left without one have nothing to describe their result and are rejected.
-
-## Inputs, outputs, and in-out
-
-Direction decides how a register operand is seen at the call. Reads are passed in, writes are returned in the result, and a read write is both. Call arguments are the reads and read writes together with the memory pointers, and the result is the writes and read writes.
-
-For example, CPUID reads four result registers from a leaf and a subleaf.
+A real element converts in place. The operand still occupies one register.
 
 ```biron
-const cpuid = asm("cpuid") {
-	asm::RegRW { .RAX },          // leaf in, result out
-	asm::RegWR { .RBX, .U32, 1 }, // result out
-	asm::RegRW { .RCX },          // subleaf in, result out
-	asm::RegWR { .RDX, .U32, 1 }, // result out
-};
-let r = unsafe { cpuid(leaf, 0) };   // r.0, r.1, r.2, r.3
-```
-
-Read writes read their input type from the value and, by default, write the same type back, the ordinary read and modify. When only a register is given, the output keeps the input type, and `asm::RegRW { .ANY }` returns whatever type went in. When the output type differs from the input, as in a conversion in place, the element and extent state the new output type.
-
-```biron
-// four packed integers in, four packed floats out of one register
+// [4]Sint32 in, [4]Real32 out
 const cvt = asm("cvtdq2ps %0, %0") { asm::RegRW { .ANY, .F32, 4 } };
 ```
 
-Because an in out uses one register, its input and its output must use the same kind of register. Converting between two kinds, such as a general integer to a floating point register, is genuinely two registers, written as a separate write and read rather than one read write.
+Both sides of a `RegRW` must use the same register class. Cross-class conversion needs two registers, written as a separate `RegWR` and `RegRD`.
+
+```biron
+const cpuid = asm("cpuid") {
+	asm::RegRW { .RAX },          // leaf in, eax out
+	asm::RegWR { .RBX, .U32, 1 }, // ebx out
+	asm::RegRW { .RCX },          // subleaf in, ecx out
+	asm::RegWR { .RDX, .U32, 1 }, // edx out
+};
+
+let r = cpuid(leaf, 0);   // r.0, r.1, r.2, r.3
+```
+
+## Early clobber
+
+`early = true` forces the output into a register distinct from every input. Use it when the instruction writes its output before reading all of its inputs.
+
+```biron
+asm::RegWR { reg = .ANY, element = .U64, extent = 1, early = true },
+```
 
 ## Memory operands
 
-Memory operands are passed a pointer, and the instruction reads or writes that memory in place. Memory operands are never part of the result, and a change is observed through the same pointer afterward. Their type comes from the pointer, and no element is described.
-
-For example, an atomic fetch and add returns the old value and leaves the sum in memory.
+Memory operands take a pointer argument and access that memory in place. They never appear in the result, so you observe the change through the same pointer. The access type comes from the pointee and no element is written.
 
 ```biron
 const fetch_add = asm("lock xadd %0, %1") {
-	asm::RegRW { .ANY },   // added in, old value out
+	asm::RegRW { .ANY },   // addend in, old value out
 	asm::MemRW { },        // updated in place
 	asm::Clobber { "cc" },
 };
-let old = unsafe { fetch_add(delta, &counter) };   // old value returned, counter has the sum
+
+let old = fetch_add(delta, &counter);   // counter now contains the sum
 ```
 
-## Immediate values
+## Immediates
 
-Immediate operands are a constant known at compile time. It is always a read, and there is no write form of one.
+`Imm` takes a compile-time constant. There is no write form.
 
 ```biron
 asm::Imm { 42 as! Uint32 },
@@ -144,67 +155,59 @@ asm::Imm { 42 as! Uint32 },
 
 ## Clobbers
 
-Clobbers record one location the instruction destroys that is not an operand. Each is its own entry, a register name such as `"rcx"`, or `"memory"` for memory the instruction touches, or `"cc"` for the condition flags.
+Each `Clobber` names one location the instruction destroys that is not an operand. Write a register name, `"memory"`, or `"cc"`.
 
 > [!CAUTION]
-> Anything left undeclared may be miscompiled, so every destroyed register and flag must be listed as a clobber.
+> Undeclared clobbers cause miscompilation. The compiler assumes anything unlisted survives the call.
 
-Given an empty template and only a `"memory"` clobber, a block is a compiler memory barrier. It emits no instruction, and it orders the surrounding loads and stores so that none are moved across it.
+An empty template with only a `"memory"` clobber is a compiler memory barrier. It emits nothing and prevents loads and stores from moving across it.
 
 ```biron
-unsafe { asm("") { asm::Clobber { "memory" } }(); }
+asm("") { asm::Clobber { "memory" } }();
 ```
 
-> [!NOTE]
-> Since an asm value is a type like any other, it can also be invoked immediately, as in the example above.
+## Template syntax
 
-## Composition
+`%N` refers to operand N, counting non-clobber entries from zero. Referring past the last operand is an error.
 
-Because a block is a value of an ordinary type, it composes the way other values do. Operand lists are built from constant expressions and shared constants, and factoring out and reusing a common sequence is possible. Asm types are also a generic argument like any other, and one routine can be written over an unknown block and specialized for each one. This is the same templating the rest of the language already has.
+Every `.ANY` register requires a `%N`. The compiler chooses that register late, so there is no name to write in the template. Pinned registers are named directly and take no placeholder.
 
-## Type checking
+An operand appears in the template only if the instruction mentions it. `syscall` takes no operand text, yet its register operands are still declared to place the values.
 
-Because the operands are typed and the template is checked against them, a class of common mistakes is caught before the program runs. Register writes must state an element, a missing operand is reported, and the type of each input register follows from its value rather than being repeated by hand.
+## Generics
 
-Without a fixed name, an `.ANY` register is referred to only by a `%N` placeholder in the template. Each `.ANY` register must have a placeholder, and each placeholder must correspond to an operand, matching the number of `.ANY` registers to the number of placeholders. Pinned registers are referred to by their own name in the template instead, and need no placeholder.
-
-## Examples
-
-Both examples below on x86-64 use more of the operand model, together with the CPUID block above.
-
-Below, a 128 bit compare and exchange uses `CMPXCHG16B`. Expected value occupies the rdx and rax pair and desired value the rcx and rbx pair, the address is in rsi, and the zero flag reports whether the exchange happened.
+Assembly types are generic arguments like any other type.
 
 ```biron
-const cas16 = asm("lock cmpxchg16b (%rsi); setz %r8b") {
-	asm::RegRW { .RAX },          // expected low in, old low out
-	asm::RegRW { .RDX },          // expected high in, old high out
-	asm::RegRD { .RBX },          // desired low
-	asm::RegRD { .RCX },          // desired high
-	asm::RegRD { .RSI },          // pointer to the 16 byte aligned value
-	asm::RegWR { .R8, .U8, 1 },   // 1 on success, 0 on failure
-	asm::Clobber { "memory" },
-	asm::Clobber { "cc" },
+type Cell = struct[T: Type] { header: Sint32, payload: T }
+
+const CELL = Cell::[asm("add $1, %0")] {
+	header  = 0,
+	payload = asm("add $1, %0") { asm::RegRW { .ANY } }
 };
-let result = unsafe { cas16(exp_lo, exp_hi, new_lo, new_hi, addr) };
-// result.0 = old_lo
-// result.1 = old_hi
-// result.2 = ok
+
+let n = CELL.payload(41 as! Sint32);   // 42
 ```
 
 ## Naked functions
 
-When an asm block is written in place of a function body, the function is naked. No entry or exit code is added, and the body is the whole function. Arguments arrive in the registers of the calling convention, and the return value is left in the register the convention expects, using those registers directly. Naked functions are written with no operand list.
+An assembly type in body position defines a naked function. No prologue or epilogue is emitted and the template is the entire body.
 
 ```biron
-fn foo(Args) -> Rets asm("
-	// instructions
+fn add(Sint32, Sint32) -> Sint32 asm("mov %edi, %eax\n\tadd %esi, %eax\n\tret");
+
+fn five() -> Sint32 asm("
+	mov $5, %eax
+	ret
 ");
 ```
 
-Parameters of a naked function are written as types alone, with no names, because a name could not be used inside the assembly. Its return type still matters. Value return types require the result in the return register, and the never type `!` marks a function that does not return.
+Parameters are unnamed types. They remain the ABI contract and fix the register each argument arrives in, but no name is referenceable from the template.
 
-Naked functions cannot have a receiver and cannot be generic. In every other respect it is an ordinary function. It can accept attributes and be an associated function. Calling one needs an `unsafe` block, the same as a call on an asm value.
+The return type is load-bearing. `-> T` requires the result in the ABI return register. `-> !` marks a function that never returns.
+
+Naked functions take no operand list, cannot have a receiver, and cannot be generic. They are ordinary functions otherwise, taking attributes and serving as associated functions.
 
 ## Safety
 
-Building an asm value is safe, because it is only constant data. Running it can break the guarantees the rest of the language keeps, and a call on an asm value is permitted only inside an `unsafe` block.
+Building an assembly value is safe. Calling one can violate memory and type safety. Nothing gates a call today, though `unsafe` is intended to once that keyword exists.
